@@ -1,0 +1,53 @@
+# Topic backlog
+
+One question per line. The daily run takes the first open ones (`- [ ]`) from the top and ticks them off (`- [x]`) with the episode file name.
+Add new ideas at the bottom. Pick only questions with a clear, well-established scientific answer.
+
+- [x] Why is the sky blue? → ep_001_why_is_the_sky_blue
+- [ ] Why do we have day and night?
+- [ ] Why does the Moon change its shape?
+- [ ] Where does rain come from?
+- [ ] How does a rainbow happen?
+- [ ] Why is the ocean salty?
+- [ ] How do bees make honey?
+- [ ] Why do leaves change color in autumn?
+- [ ] Why do we have seasons?
+- [ ] Where does thunder come from?
+- [ ] Why does ice float?
+- [ ] How do fish breathe underwater?
+- [ ] How does a caterpillar turn into a butterfly?
+- [ ] Why do stars twinkle?
+- [ ] How do volcanoes work?
+- [ ] Why does the Sun shine?
+- [ ] How do airplanes stay in the air?
+- [ ] How do big ships float?
+- [ ] Why is grass green?
+- [ ] How do plants eat?
+- [ ] Why do onions make you cry?
+- [ ] Why do we get goosebumps?
+- [ ] What makes the wind blow?
+- [ ] How do magnets work?
+- [ ] How does your heart work?
+- [ ] How do echoes work?
+- [ ] How do chameleons change color?
+- [ ] How do spiders make webs?
+- [ ] Why do we have to brush our teeth?
+- [ ] How do clouds float?
+- [ ] Why are bubbles round?
+- [ ] How do bats find their way in the dark?
+- [ ] How do earthquakes happen?
+- [ ] Why can we sometimes see the Moon during the day?
+- [ ] Why don't penguins freeze?
+- [ ] How does a seed grow into a plant?
+- [ ] How does sound get to your ears?
+- [ ] Why do things fall down?
+- [ ] How do whales breathe?
+- [ ] How can owls turn their heads so far?
+- [ ] What are shooting stars?
+- [ ] Why is Mars red?
+- [ ] How do ants find their way home?
+- [ ] Why does popcorn pop?
+- [ ] Why is snow white?
+- [ ] Why do we need bones?
+- [ ] Where does the Sun go at night?
+- [ ] Why do we have eyebrows?
