@@ -1,6 +1,6 @@
 # Why-Videos for kids – daily production
 
-Animated 60–75 s vertical (1080x1920, 60 fps) explainer shorts for kids (about 5–10 years old), in **English**, for TikTok, Instagram Reels and YouTube Shorts.
+Animated 60–75 s vertical (1080x1920, 60 fps) explainer shorts for kids (about 5–10 years old), in **English**, for **TikTok and YouTube Shorts only** (Instagram is not used).
 Owner: Dean. He talks German – write all chat messages to him in **German**, the videos themselves in **English**.
 
 ## Daily run (what a scheduled run does)
@@ -13,7 +13,7 @@ Owner: Dean. He talks German – write all chat messages to him in **German**, t
    - Check the result: duration 60–90 s (`ffprobe`), one frame from the middle looks right.
    - Copy the video to `/tmp/out/<Title_With_Underscores>.mp4` and send it to Dean with SendUserFile.
 4. Tick the topics off in `topics.md`, commit the new episode files + `topics.md` and push (no video files in git).
-5. Send Dean ONE German message (SendUserMessage) with, per video: title, length, a ready-to-paste English caption with 4–5 hashtags, and the 1-line fact summary. End with: "Antworte mit ok, dann sind sie freigegeben – oder sag mir, welches raus soll."
+5. Send Dean ONE German message (SendUserMessage) with, per video: title, length, the 1-line fact summary, and ready-to-paste English texts for both platforms: **TikTok** caption with 4–5 hashtags; **YouTube** title (max 100 characters, ending with #shorts) plus a 1–2 sentence description. Suggested posting times: video 1 at 7:00, video 2 at 13:00, video 3 at 17:00 German time. End with: "Antworte mit ok, dann sind sie freigegeben – oder sag mir, welches raus soll."
 6. **Never post or publish anything.** Posting only happens after Dean's explicit OK in chat.
 
 ## Episode format (keep it consistent – it is the channel's brand)
