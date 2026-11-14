@@ -4,9 +4,9 @@ One question per line. The daily run takes the first open ones (`- [ ]`) from th
 Add new ideas at the bottom. Pick only questions with a clear, well-established scientific answer.
 
 - [x] Why is the sky blue? → ep_001_why_is_the_sky_blue
-- [ ] Why do we have day and night?
-- [ ] Why does the Moon change its shape?
-- [ ] Where does rain come from?
+- [x] Why do we have day and night? → ep_002_why_do_we_have_day_and_night
+- [x] Why does the Moon change its shape? → ep_003_why_does_the_moon_change_its_shape
+- [x] Where does rain come from? → ep_004_where_does_rain_come_from
 - [ ] How does a rainbow happen?
 - [ ] Why is the ocean salty?
 - [ ] How do bees make honey?

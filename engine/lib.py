@@ -467,3 +467,186 @@ def assemble(outdir, n_scenes, audio, out):
                     '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest',
                     '-movflags', '+faststart', tmp], check=True)
     os.replace(tmp, out)
+
+# ---------------- Space, Moon, Earth, Weather (added for ep_002+) ----------------
+def stars(c, t, seed=21, n=110, y0=0, y1=1550, a=1.0):
+    rnd = random.Random(seed)
+    for i in range(n):
+        x, y = rnd.uniform(0, W), rnd.uniform(y0, y1); tw = 0.5 + 0.5 * math.sin(t * rnd.uniform(1.5, 4) + i)
+        c.drawCircle(x, y, rnd.uniform(1.5, 4.5), P(color=col('#ffffff', int((90 + 160 * tw) * a))))
+
+def space(c, t, seed=21, n=130):
+    sky(c, '#03040b', '#1c2145', mid='#0b0e24'); stars(c, t, seed, n, y1=H)
+
+def follow_button(c, t, start, x=540, y=1530):
+    if t <= start: return
+    b = ease_back(prog(t, start, 0.55), 2.2); bob = 1 + 0.05 * math.sin(t * 6)
+    c.save(); c.translate(x, y); c.scale(b * bob, b * bob)
+    c.drawRoundRect(skia.Rect(-250, -66, 250, 94), 80, 80, P(color=col('#000000', 60), blur=10))
+    c.drawRoundRect(skia.Rect(-250, -80, 250, 80), 80, 80, lin(c, (0, -80, 0, 80), [col('#ff5c85'), col('#e8264f')]))
+    c.drawRoundRect(skia.Rect(-250, -80, 250, 80), 80, 80, P(color=col('#ffffff'), stroke=8))
+    text_block(c, '+ Follow', 0, 0, size=80, fill='#ffffff', stroke='#b8183f')
+    c.restore()
+
+_CONT = [(0.00, -0.35, 0.30, 0.22), (0.08, 0.15, 0.22, 0.30), (0.30, -0.10, 0.34, 0.40), (0.42, 0.45, 0.18, 0.16),
+         (0.58, -0.45, 0.30, 0.18), (0.66, 0.05, 0.20, 0.28), (0.82, 0.30, 0.26, 0.22), (0.90, -0.20, 0.16, 0.20)]
+def earth(c, x, y, r, t, rot=0.0, mood='happy', face_on=True, sun_dir=None, night=0.62):
+    """Side view globe. rot = turns (continents scroll). sun_dir = angle in degrees pointing to the sun (180 = left) -> night side shaded."""
+    c.drawCircle(x, y, r * 1.25, rad(x, y, r * 1.25, [col('#7fd0ff', 110), col('#7fd0ff', 0)]))
+    c.save(); clip = skia.Path(); clip.addCircle(x, y, r); c.clipPath(clip, doAntiAlias=True)
+    c.drawCircle(x, y, r, rad(x - r * 0.3, y - r * 0.35, r * 1.6, [col('#6cc8ff'), col('#2f80ff'), col('#1a4fb8')], [0, 0.5, 1]))
+    for lon, lat, w, h in _CONT:
+        a = 2 * math.pi * (lon + rot); ca = math.cos(a)
+        if ca <= 0.02: continue
+        cx = x + math.sin(a) * r * math.sqrt(max(0, 1 - lat * lat)); cy = y + lat * r
+        ww = w * r * ca
+        c.drawOval(skia.Rect(cx - ww, cy - h * r, cx + ww, cy + h * r), P(color=col('#5fd068')))
+        c.drawOval(skia.Rect(cx - ww * 0.6, cy - h * r * 0.5, cx + ww * 0.5, cy + h * r * 0.4), P(color=col('#46b553')))
+    c.drawOval(skia.Rect(x - r * 0.35, y - r * 1.04, x + r * 0.35, y - r * 0.88), P(color=col('#ffffff', 230)))
+    c.drawOval(skia.Rect(x - r * 0.3, y + r * 0.9, x + r * 0.3, y + r * 1.04), P(color=col('#ffffff', 230)))
+    if sun_dir is not None:
+        c.save(); c.translate(x, y); c.rotate(sun_dir)
+        c.drawRect(skia.Rect(-r * 1.1, -r * 1.1, r * 1.1, r * 1.1), lin(c, (r * 0.15, 0, -r * 0.25, 0), [col('#0a1238', 0), col('#0a1238', int(255 * night))], vertical=False))
+        c.restore()
+    c.restore()
+    c.drawCircle(x, y, r, P(color=col('#ffffff', 70), stroke=r * 0.03))
+    c.drawOval(skia.Rect(x - r * 0.6, y - r * 0.75, x - r * 0.1, y - r * 0.45), P(color=col('#ffffff', 90), blur=r * 0.06))
+    if face_on: face(c, x, y + r * 0.08, r * 0.85, t, 1.3, mood)
+
+def earth_top(c, x, y, r, t, rot=0.0, sun_dir=180, night=0.65):
+    """North-pole view: disc with continents rotating around the centre; half facing sun_dir is lit."""
+    c.drawCircle(x, y, r * 1.2, rad(x, y, r * 1.2, [col('#7fd0ff', 100), col('#7fd0ff', 0)]))
+    c.save(); clip = skia.Path(); clip.addCircle(x, y, r); c.clipPath(clip, doAntiAlias=True)
+    c.drawCircle(x, y, r, rad(x, y, r, [col('#4aa8ff'), col('#2f80ff'), col('#1a4fb8')], [0, 0.6, 1]))
+    c.save(); c.translate(x, y); c.rotate(rot * 360)
+    for i, (dx, dy, rr) in enumerate([(-0.45, -0.3, 0.32), (0.4, -0.45, 0.25), (0.5, 0.35, 0.3), (-0.3, 0.5, 0.26), (0.05, 0.05, 0.18)]):
+        c.drawCircle(dx * r, dy * r, rr * r, P(color=col('#5fd068')))
+    c.drawCircle(0, 0, r * 0.22, P(color=col('#ffffff', 235)))
+    c.restore()
+    c.save(); c.translate(x, y); c.rotate(sun_dir)
+    c.drawRect(skia.Rect(-r * 1.1, -r * 1.1, 0, r * 1.1), P(color=col('#0a1238', int(255 * night))))
+    c.restore(); c.restore()
+    c.drawCircle(x, y, r, P(color=col('#ffffff', 80), stroke=r * 0.03))
+
+def house(c, x, y, s=1.0, ang=0.0, lit=True):
+    """x,y = bottom centre; ang = rotation in degrees (0 = upright)."""
+    c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s)
+    c.drawRect(skia.Rect(-40, -60, 40, 0), P(color=col('#fff1d6' if lit else '#8a8fb0')))
+    rf = skia.Path(); rf.moveTo(-55, -55); rf.lineTo(0, -100); rf.lineTo(55, -55); rf.close()
+    c.drawPath(rf, P(color=col('#ff6b6b' if lit else '#9a4a5a')))
+    c.drawRect(skia.Rect(-10, -30, 10, 0), P(color=col('#8a5a3a')))
+    c.drawRect(skia.Rect(16, -48, 32, -32), P(color=col('#ffd23f' if not lit else '#8fd3ff')))
+    c.drawRect(skia.Rect(-40, -60, 40, 0), P(color=col('#2b1d0e', 120), stroke=3))
+    c.restore()
+
+def zzz(c, x, y, t, size=60, alpha=255):
+    for i in range(3):
+        u = (t * 0.5 + i / 3) % 1.0
+        a = int(alpha * math.sin(u * math.pi))
+        text_block(c, 'z', x + u * 60 + i * 8, y - u * 140, size=int(size * (0.6 + 0.6 * u)), fill='#ffffff', stroke='#3a4a8a', alpha=a)
+
+def moon(c, x, y, r, t, phase=0.5, face_on=True, mood='happy', glow=True, dark_a=150, lit_left=False):
+    """phase: 0 = new, 0.25 = right half lit, 0.5 = full, 0.75 = left half lit. lit_left mirrors (for 'sun on the left' diagrams use moon_lit)."""
+    ph = phase % 1.0
+    if glow:
+        k = (1 - math.cos(2 * math.pi * ph)) / 2
+        c.drawCircle(x, y, r * 1.7, rad(x, y, r * 1.7, [col('#fff6c8', int(110 * k)), col('#fff6c8', 0)]))
+    c.drawCircle(x, y, r, P(color=col('#4a5274', dark_a)))
+    c.drawCircle(x, y, r, P(color=col('#8a93c0', int(dark_a * 0.8)), stroke=r * 0.03))
+    lit = moon_lit_path(x, y, r, ph)
+    if lit is not None:
+        c.save(); c.clipPath(lit, doAntiAlias=True)
+        c.drawCircle(x, y, r, rad(x - r * 0.3, y - r * 0.35, r * 1.5, [col('#fffdf0'), col('#fff1b8'), col('#f2d77a')], [0, 0.5, 1]))
+        for dx, dy, rr in [(-0.35, -0.3, 0.16), (0.3, 0.25, 0.13), (0.1, -0.5, 0.09), (-0.45, 0.4, 0.08), (0.5, -0.15, 0.07)]:
+            c.drawCircle(x + dx * r, y + dy * r, rr * r, P(color=col('#e6c96a', 160)))
+        c.restore()
+    if face_on: face(c, x, y + r * 0.05, r * 0.85, t, 2.1, mood)
+
+def moon_lit_path(x, y, r, ph, lit_dir=0.0):
+    """Lit region of the moon disc. lit_dir rotates the terminator (degrees)."""
+    ph = ph % 1.0
+    if ph < 0.004 or ph > 0.996: return None
+    disc = skia.Path(); disc.addCircle(x, y, r)
+    if abs(ph - 0.5) < 0.004: return disc
+    half = skia.Path()
+    if ph < 0.5: half.addRect(x, y - r - 2, x + r + 2, y + r + 2)
+    else: half.addRect(x - r - 2, y - r - 2, x, y + r + 2)
+    half = skia.Op(disc, half, skia.PathOp.kIntersect_PathOp)
+    w = abs(math.cos(2 * math.pi * ph)) * r
+    ell = skia.Path(); ell.addOval(skia.Rect(x - w, y - r, x + w, y + r))
+    crescent = ph < 0.25 or ph > 0.75
+    out = skia.Op(half, ell, skia.PathOp.kDifference_PathOp if crescent else skia.PathOp.kUnion_PathOp)
+    if lit_dir:
+        out.transform(skia.Matrix.RotateDeg(lit_dir, (x, y)))
+    return out
+
+def half_lit_ball(c, x, y, r, t, sun_dir=180, face_on=False, mood='happy', base='#fff1b8', dark='#3a4166'):
+    """Moon seen from above / from the side: the half pointing to sun_dir (degrees) is bright."""
+    c.drawCircle(x, y, r, P(color=col(dark)))
+    c.save(); clip = skia.Path(); clip.addCircle(x, y, r); c.clipPath(clip, doAntiAlias=True)
+    c.translate(x, y); c.rotate(sun_dir)
+    c.drawRect(skia.Rect(0, -r - 2, r + 2, r + 2), P(color=col(base)))
+    c.restore()
+    c.drawCircle(x, y, r, P(color=col('#ffffff', 90), stroke=max(2, r * 0.05)))
+    if face_on: face(c, x, y + r * 0.05, r * 0.85, t, 2.1, mood)
+
+def raindrop(c, x, y, r, t, seed=0, face_on=True, mood='happy', shape='tear', alpha=255, squash=0.0):
+    """x,y = centre of the round belly. shape: 'tear' | 'round' | 'bun'."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.scale(1 + squash, 1 - squash)
+    pth = skia.Path()
+    if shape == 'tear':
+        pth.moveTo(0, -r * 1.9); pth.cubicTo(r * 0.35, -r * 1.2, r, -r * 0.6, r, 0)
+        pth.arcTo(skia.Rect(-r, -r, r, r), 0, 180, False); pth.cubicTo(-r, -r * 0.6, -r * 0.35, -r * 1.2, 0, -r * 1.9); pth.close()
+    elif shape == 'round':
+        pth.addCircle(0, 0, r)
+    else:
+        pth.moveTo(-r * 1.2, r * 0.45); pth.cubicTo(-r * 1.35, -r * 1.25, r * 1.35, -r * 1.25, r * 1.2, r * 0.45)
+        pth.quadTo(0, r * 0.25, -r * 1.2, r * 0.45); pth.close()
+    c.drawPath(pth, rad(-r * 0.3, -r * 0.5, r * 2.0, [col('#e8f7ff', a), col('#6cc4ff', a), col('#2f80ff', a)], [0, 0.45, 1]))
+    c.drawPath(pth, P(color=col('#1f63c9', int(a * 0.5)), stroke=max(2, r * 0.06)))
+    c.drawOval(skia.Rect(-r * 0.55, -r * 0.6, -r * 0.2, -r * 0.05), P(color=col('#ffffff', int(a * 0.8)), blur=r * 0.04))
+    if face_on and a > 200:
+        face(c, 0, r * (0.05 if shape != 'bun' else -0.2), r * (0.85 if shape != 'bun' else 0.75), t, seed, mood)
+    c.restore()
+
+def vapor(c, x, y, s, t, seed=0, alpha=255):
+    """Wiggly see-through puff of water vapor."""
+    a = int(alpha)
+    pth = skia.Path()
+    for i in range(14):
+        u = i / 13; yy = y - u * 90 * s; xx = x + math.sin(t * 3 + seed + u * 6) * 14 * s
+        (pth.moveTo if i == 0 else pth.lineTo)(xx, yy)
+    c.drawPath(pth, P(color=col('#ffffff', int(a * 0.55)), stroke=12 * s, blur=4 * s))
+    c.drawPath(pth, P(color=col('#ffffff', int(a * 0.8)), stroke=4 * s))
+
+def sea(c, y, t, c1='#3fa9ff', c2='#1a5fc9'):
+    p = skia.Path(); p.moveTo(0, y)
+    for i in range(0, W + 41, 40):
+        p.lineTo(i, y + math.sin(i * 0.02 + t * 2) * 12)
+    p.lineTo(W, H); p.lineTo(0, H); p.close()
+    c.drawPath(p, lin(c, (0, y, 0, H), [col(c1), col(c2)]))
+    for k in range(3):
+        yy = y + 50 + k * 70
+        for i in range(6):
+            x0 = (i * 220 + t * (30 + k * 10) + k * 90) % (W + 200) - 100
+            c.drawLine(x0, yy, x0 + 70, yy, P(color=col('#ffffff', 90), stroke=6))
+
+def cloud_char(c, x, y, s, t, seed=0, mood='happy', gray=0.0, face_on=True):
+    """Big cloud with a face. gray 0..1 makes it a rain cloud."""
+    parts = [(-130, 20, 85), (-60, -40, 105), (50, -55, 115), (140, 0, 90), (-20, 40, 90), (80, 45, 85), (-170, 55, 55), (190, 55, 55)]
+    top = mix_hex('#ffffff', '#9aa7bd', gray); sh = mix_hex('#b9d6ee', '#6f7d95', gray)
+    for dx, dy, r in parts: c.drawCircle(x + dx * s, y + (dy + 16) * s, r * s, P(color=sh))
+    for dx, dy, r in parts: c.drawCircle(x + dx * s, y + dy * s, r * s, P(color=top))
+    for dx, dy, r in parts[1:3]: c.drawCircle(x + (dx - 15) * s, y + (dy - 20) * s, r * 0.45 * s, P(color=col('#ffffff', int(150 * (1 - gray * 0.6))), blur=8 * s))
+    if face_on: face(c, x, y + 10 * s, 105 * s, t, seed, mood)
+
+def curved_arrow(c, cx, cy, r, a0, a1, colr='#ffffff', w=14, alpha=255):
+    """Arc arrow from angle a0 to a1 (degrees, clockwise positive)."""
+    pth = skia.Path(); pth.addArc(skia.Rect(cx - r, cy - r, cx + r, cy + r), a0, a1 - a0)
+    c.drawPath(pth, P(color=col(colr, alpha), stroke=w))
+    ang = math.radians(a1); ex, ey = cx + math.cos(ang) * r, cy + math.sin(ang) * r
+    d = 1 if a1 > a0 else -1; tx, ty = -math.sin(ang) * d, math.cos(ang) * d
+    nx, ny = math.cos(ang), math.sin(ang); L = w * 2.2
+    hd = skia.Path(); hd.moveTo(ex + tx * L, ey + ty * L); hd.lineTo(ex + nx * L * 0.8, ey + ny * L * 0.8); hd.lineTo(ex - nx * L * 0.8, ey - ny * L * 0.8); hd.close()
+    c.drawPath(hd, P(color=col(colr, alpha)))
