@@ -403,7 +403,7 @@ def build(episode, outdir, workers=2):
         m = music(total); mus[:len(m)] = m
     # Ducking: Musik leiser, wenn gesprochen wird
     env = np.convolve(np.abs(v), np.ones(4410) / 4410, 'same'); duck = 1 - 0.55 * np.clip(env * 12, 0, 1)
-    mixed = v * 1.0 + mus * 0.16 * duck + fx * 0.22
+    mixed = v * 1.0 + mus * float(os.environ.get('WARUM_MUSIC_VOL', '0.16')) * duck + fx * 0.22
     mixed = mixed[:int(SR * total)]; mixed /= max(1.0, np.abs(mixed).max() / 0.95)
     audio = os.path.join(outdir, 'audio.wav'); write_wav(audio, mixed)
     json.dump([dict(si=t['si'], start=t['start'], D=t['D'], cues=t['cues']) for t in timeline],

@@ -32,3 +32,13 @@ Owner: Dean. He talks German – write all chat messages to him in **German**, t
 - A scene = `dict(name, draw=fn(c,t,D,cues), lines=[(spoken, caption)], sfx_fn=fn(D,cues)->[(t,'pop'|'boing'|'whoosh'|'sparkle')], tail=sec)`. `cues[i]['start']` is when line i is spoken – time animations to it.
 - New characters/props are welcome – add reusable ones to lib.py so later episodes can use them.
 - The engine handles voice (Kokoro), captions, crossfades, slow camera push-in and rendering.
+
+## Posting after Dean's "ok" (YouTube automated, TikTok by Dean)
+Only after Dean answers "ok" in chat. Needs his Mac on with the Claude desktop app open (built-in browser, `mcp__remote-devices__Claude_Browser__*`; signed in to YouTube Studio, channel UC3LqzSWi2dBYFOyedYj62QA). The pane is usually hidden, so clicks fail – do everything with `javascript_tool`.
+1. Push the videos to the PUBLIC repo `deanhensel0611-dot/littlewhylab-media` as `v/<slug>.mp4` (attach with add_repo, push access). Raw URL: `https://raw.githubusercontent.com/deanhensel0611-dot/littlewhylab-media/main/v/<slug>.mp4`.
+2. Per video in YouTube Studio: open `https://studio.youtube.com/channel/UC3LqzSWi2dBYFOyedYj62QA/videos/upload?d=ud`; in JS fetch the raw URL → `new File([...])` → `DataTransfer` → set `input[type=file]`.files + dispatch `change`.
+3. Title/description: `ytcp-uploads-dialog #textbox[contenteditable=true]` [0]/[1] → focus, `execCommand('selectAll')`, `execCommand('insertText', …)`.
+4. Click `tp-yt-paper-radio-button[name="VIDEO_MADE_FOR_KIDS_MFK"]`, then `#next-button` 3×.
+5. Schedule: click `#second-container-expand-button`; date via `#datepicker-trigger`; for the time focus+click the `ytcp-visibility-scheduler tp-yt-paper-input input`, then click the `tp-yt-paper-item` whose text is the time (setting the input value directly does NOT stick). Browser time zone is Asia/Tokyo: 7:00/13:00/17:00 Berlin = 15:00/21:00/01:00(+1 day) JST in winter. Then `#done-button`. Verify the confirmation text shows the right time.
+6. TikTok cannot be automated (its CSP blocks loading the file, and sounds can only be added in the app): send Dean the TikTok captions; he posts from the phone app with a trending sound at ~5–10 % volume.
+7. After upload, delete the videos from littlewhylab-media again (git rm + push).
