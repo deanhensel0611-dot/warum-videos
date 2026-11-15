@@ -6,6 +6,9 @@ import numpy as np
 import skia
 
 W, H, FPS = 1080, 1920, 60
+# Output is supersampled: layout stays in 1080x1920 units, pixels are rendered at SS x that (1440x2560 by default).
+SS = float(os.environ.get('WARUM_SS', str(4 / 3)))
+OW, OH = int(round(W * SS)) // 2 * 2, int(round(H * SS)) // 2 * 2
 SR = 44100
 FONT_PATH = '/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc'
 VOICE = os.environ.get('WARUM_VOICE', 'af_heart')
@@ -431,10 +434,10 @@ def render_scene(args):
     sc = ep['scenes'][si]
     tmp = os.path.join(outdir, f'scene_{si:02d}.tmp.mp4'); final = os.path.join(outdir, f'scene_{si:02d}.mp4')
     n = int(round(D * FPS))
-    proc = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', f'{W}x{H}',
-                             '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-crf', '20', '-preset', 'veryfast',
+    proc = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', f'{OW}x{OH}',
+                             '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-tune', 'animation', '-profile:v', 'high',
                              '-pix_fmt', 'yuv420p', '-r', str(FPS), tmp], stdin=subprocess.PIPE)
-    surf = skia.Surface(W, H)
+    surf = skia.Surface(OW, OH)
     for i in range(n):
         t = i / FPS
         render_into(surf.getCanvas(), ep, si, t, D, cues, prev)
@@ -445,6 +448,7 @@ def render_scene(args):
 
 def render_into(c, ep, si, t, D, cues, prev):
     c.clear(skia.ColorWHITE)
+    c.resetMatrix(); c.scale(OW / W, OH / H)
     sc = ep['scenes'][si]
     if prev is not None and t < XFADE:
         pD, pcues = prev
@@ -455,7 +459,7 @@ def render_into(c, ep, si, t, D, cues, prev):
         draw_full(sc, c, t, D, cues)
 
 def frame(episode, si, t, D, cues, path, prev=None):
-    surf = skia.Surface(W, H); render_into(surf.getCanvas(), episode, si, t, D, cues, prev)
+    surf = skia.Surface(OW, OH); render_into(surf.getCanvas(), episode, si, t, D, cues, prev)
     surf.makeImageSnapshot().save(path, skia.kJPEG)
 
 def assemble(outdir, n_scenes, audio, out):
@@ -792,3 +796,12 @@ def beehive(c, x, y, s, t, face_on=True):
     c.drawOval(skia.Rect(-45, -95, 45, -25), P(color=col('#4a2a0c')))
     if face_on: face(c, 0, -230, 95, t, 6)
     c.restore()
+
+
+def trail(c, pts_hist, hexcol, width=14):
+    """Smooth fading motion trail (butt caps, so overlapping segments don't show as beads)."""
+    n = len(pts_hist)
+    for i in range(1, n):
+        p = P(color=col(hexcol, int(170 * i / n)), stroke=max(1.0, width * i / n))
+        p.setStrokeCap(skia.Paint.kButt_Cap)
+        c.drawLine(*pts_hist[i - 1], *pts_hist[i], p)

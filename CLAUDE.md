@@ -28,10 +28,11 @@ Owner: Dean. He talks German – write all chat messages to him in **German**, t
 ## Engine (engine/lib.py)
 - Backgrounds: `sky`, `sunbeams`, `clouds`, `cloud`, `birds`, `hills(t=, trees=, dark=)`, `tree`, `dust`, `vignette` (auto).
 - Characters: `sun`, `photon(vel=)`, `molecule`, `kid(wave=, helmet=)`, `face(mood='happy'|'wow')`.
-- Helpers: `col`, `P(color, stroke, blur)`, `lin`, `rad`, `ease_out/ease_in_out/ease_back`, `prog(t, start, dur)`, `text_block`.
+- Helpers: `trail(c, points, hexcol, width)` (use this lib version for motion trails, no local copy), `col`, `P(color, stroke, blur)`, `lin`, `rad`, `ease_out/ease_in_out/ease_back`, `prog(t, start, dur)`, `text_block`.
 - A scene = `dict(name, draw=fn(c,t,D,cues), lines=[(spoken, caption)], sfx_fn=fn(D,cues)->[(t,'pop'|'boing'|'whoosh'|'sparkle')], tail=sec)`. `cues[i]['start']` is when line i is spoken – time animations to it.
 - New characters/props are welcome – add reusable ones to lib.py so later episodes can use them.
 - The engine handles voice (Kokoro), captions, crossfades, slow camera push-in and rendering.
+- **Quality bar (Dean's explicit wish): very high quality.** Output is rendered supersampled at 1440x2560, 60 fps, x264 CRF 16 preset medium – do not lower these. Draw detailed, smooth, anti-aliased art; zoom into preview frames at full size and fix anything jagged, blurry, beaded or cheap-looking before rendering.
 
 ## Posting after Dean's "ok" (YouTube automated, TikTok by Dean)
 Only after Dean answers "ok" in chat. Needs his Mac on with the Claude desktop app open (built-in browser, `mcp__remote-devices__Claude_Browser__*`; signed in to YouTube Studio, channel UC3LqzSWi2dBYFOyedYj62QA). The pane is usually hidden, so clicks fail – do everything with `javascript_tool`.
