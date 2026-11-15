@@ -12,6 +12,7 @@ Owner: Dean. He talks German – write all chat messages to him in **German**, t
    - `python3 engine/run.py ep_NNN_<slug> /tmp/out/ep_NNN preview` → look at the preview JPGs (Read tool). Fix overlapping text, elements in the caption zone, anything cut off or ugly. Then `... render`.
    - Check the result: duration 60–90 s (`ffprobe`), one frame from the middle looks right.
    - Copy the video to `/tmp/out/<Title_With_Underscores>.mp4` and send it to Dean with SendUserFile.
+   - Also save it on Dean's Mac in `~/Video automatatiom` with `mcp__remote-devices__device_commit_files` (fileUuid from SendUserFile). If the folder is not connected yet, request it once with `device_request_folder_access`. If the Mac is offline, skip this and mention it in the summary.
 4. Tick the topics off in `topics.md`, commit the new episode files + `topics.md` and push (no video files in git).
 5. Send Dean ONE German message (SendUserMessage) with, per video: title, length, the 1-line fact summary, and ready-to-paste English texts for both platforms: **TikTok** caption with 4–5 hashtags; **YouTube** title (max 100 characters, ending with #shorts) plus a 1–2 sentence description. Suggested posting times: video 1 at 7:00, video 2 at 13:00, video 3 at 17:00 German time. End with: "Antworte mit ok, dann sind sie freigegeben – oder sag mir, welches raus soll."
 6. **Never post or publish anything.** Posting only happens after Dean's explicit OK in chat.
