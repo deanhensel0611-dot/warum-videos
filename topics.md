@@ -7,9 +7,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why do we have day and night? → ep_002_why_do_we_have_day_and_night
 - [x] Why does the Moon change its shape? → ep_003_why_does_the_moon_change_its_shape
 - [x] Where does rain come from? → ep_004_where_does_rain_come_from
-- [ ] How does a rainbow happen?
-- [ ] Why is the ocean salty?
-- [ ] How do bees make honey?
+- [x] How does a rainbow happen? → ep_005_how_does_a_rainbow_happen
+- [x] Why is the ocean salty? → ep_006_why_is_the_ocean_salty
+- [x] How do bees make honey? → ep_007_how_do_bees_make_honey
 - [ ] Why do leaves change color in autumn?
 - [ ] Why do we have seasons?
 - [ ] Where does thunder come from?

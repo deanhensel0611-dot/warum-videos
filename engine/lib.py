@@ -650,3 +650,145 @@ def curved_arrow(c, cx, cy, r, a0, a1, colr='#ffffff', w=14, alpha=255):
     nx, ny = math.cos(ang), math.sin(ang); L = w * 2.2
     hd = skia.Path(); hd.moveTo(ex + tx * L, ey + ty * L); hd.lineTo(ex + nx * L * 0.8, ey + ny * L * 0.8); hd.lineTo(ex - nx * L * 0.8, ey - ny * L * 0.8); hd.close()
     c.drawPath(hd, P(color=col(colr, alpha)))
+
+# ---------------- Rainbow, salt, bees (added for ep_005+) ----------------
+RAINBOW = ['#ff3b3b', '#ff9f1c', '#ffe14d', '#4cd964', '#2fa8ff', '#3a5bff', '#9b4dff']
+
+def rainbow(c, cx, cy, r, band=26, grow=1.0, alpha=255, a0=180, sweep=180):
+    """Rainbow arc centred at cx,cy (outer radius r). grow 0..1 draws it from the left. Red outside, violet inside."""
+    if grow <= 0: return
+    for i, h in enumerate(RAINBOW):
+        rr = r - band * (i + 0.5)
+        pth = skia.Path(); pth.addArc(skia.Rect(cx - rr, cy - rr, cx + rr, cy + rr), a0, sweep * grow)
+        p = P(color=col(h, alpha), stroke=band + 1); p.setStrokeCap(skia.Paint.kButt_Cap)
+        c.drawPath(pth, p)
+    pth = skia.Path(); pth.addArc(skia.Rect(cx - r, cy - r, cx + r, cy + r), a0, sweep * grow)
+    c.drawPath(pth, P(color=col('#ffffff', int(alpha * 0.25)), stroke=band * 3, blur=band))
+
+def salt_crystal(c, x, y, s, t, seed=0, face_on=True, mood='happy', alpha=255, rot=0.0):
+    """Cute little salt cube (x,y = centre)."""
+    a = int(alpha); r = 50 * s
+    c.save(); c.translate(x, y + math.sin(t * 3 + seed) * 4 * s); c.rotate(rot + math.sin(t * 2 + seed) * 4)
+    top = skia.Path(); top.moveTo(-r, -r * 0.55); top.lineTo(-r * 0.45, -r * 1.05); top.lineTo(r * 1.05, -r * 1.05); top.lineTo(r, -r * 0.55); top.close()
+    side = skia.Path(); side.moveTo(r, -r * 0.55); side.lineTo(r * 1.05, -r * 1.05); side.lineTo(r * 1.05, r * 0.5); side.lineTo(r, r); side.close()
+    c.drawPath(top, P(color=col('#ffffff', a)))
+    c.drawPath(side, P(color=col('#cfe3f2', a)))
+    c.drawRoundRect(skia.Rect(-r, -r * 0.55, r, r), r * 0.12, r * 0.12, lin(c, (0, -r, 0, r), [col('#ffffff', a), col('#e3f1fb', a)]))
+    c.drawRoundRect(skia.Rect(-r, -r * 0.55, r, r), r * 0.12, r * 0.12, P(color=col('#9fbdd6', a), stroke=max(2, r * 0.06)))
+    c.drawLine(-r * 0.7, -r * 0.35, -r * 0.35, -r * 0.35, P(color=col('#ffffff', a), stroke=r * 0.08))
+    if face_on and a > 200: face(c, 0, r * 0.25, r * 0.8, t, seed, mood)
+    c.restore()
+
+def rock(c, x, y, s, t, seed=0, face_on=True, mood='happy', worn=0.0):
+    """Friendly grey rock, x,y = bottom centre. worn 0..1 makes it smaller/rounder."""
+    k = 1 - 0.35 * worn
+    c.save(); c.translate(x, y); c.scale(s * k, s * k)
+    c.drawOval(skia.Rect(-150, -14, 150, 14), P(color=col('#000000', 50), blur=8))
+    pth = skia.Path(); pth.moveTo(-140, 0); pth.cubicTo(-170, -120, -90, -200, 0, -200); pth.cubicTo(110, -210, 170, -110, 140, 0); pth.close()
+    c.drawPath(pth, lin(c, (0, -210, 0, 0), [col('#b7bfcc'), col('#7d8799')]))
+    for dx, dy, rr in [(-70, -60, 14), (60, -130, 10), (85, -45, 8), (-30, -150, 7)]:
+        c.drawCircle(dx, dy, rr, P(color=col('#6b7486', 150)))
+    c.drawOval(skia.Rect(-90, -180, -30, -150), P(color=col('#ffffff', 80), blur=6))
+    if face_on: face(c, 0, -95, 85, t, seed, mood)
+    c.restore()
+
+def flower(c, x, y, s, t, seed=0, petal='#ff8fab', stem=True, face_on=True):
+    """x,y = centre of the blossom."""
+    sway = math.sin(t * 1.6 + seed) * 4
+    if stem:
+        c.drawLine(x, y, x + sway, y + 260 * s, P(color=col('#3fae4a'), stroke=14 * s))
+        lf = skia.Path(); lf.moveTo(x + sway * 0.5, y + 170 * s); lf.quadTo(x + 70 * s, y + 120 * s, x + 90 * s, y + 160 * s); lf.quadTo(x + 50 * s, y + 190 * s, x + sway * 0.5, y + 170 * s); lf.close()
+        c.drawPath(lf, P(color=col('#4cc35a')))
+    c.save(); c.translate(x, y); c.rotate(sway * 2 + t * 6)
+    for i in range(6):
+        c.save(); c.rotate(i * 60)
+        c.drawOval(skia.Rect(-28 * s, -95 * s, 28 * s, -25 * s), P(color=col(petal)))
+        c.drawOval(skia.Rect(-28 * s, -95 * s, 28 * s, -25 * s), P(color=col('#ffffff', 90), stroke=3 * s))
+        c.restore()
+    c.restore()
+    c.drawCircle(x, y, 40 * s, rad(x - 10 * s, y - 12 * s, 60 * s, [col('#ffe680'), col('#ffb703')]))
+    if face_on: face(c, x, y + 3 * s, 36 * s, t, seed)
+
+def bee(c, x, y, s, t, seed=0, mood='happy', flip=False, cheeks_full=0.0):
+    """Round cute honeybee, x,y = body centre. flip = facing left."""
+    c.save(); c.translate(x, y + math.sin(t * 6 + seed) * 6 * s); c.scale(-s if flip else s, s)
+    flap = math.sin(t * 60 + seed) * 0.5 + 0.5
+    for dx, rot in [(-18, -25), (22, 20)]:
+        c.save(); c.translate(dx, -55); c.rotate(rot - flap * 20 * (1 if dx > 0 else -1))
+        c.drawOval(skia.Rect(-30, -80, 30, 0), P(color=col('#ffffff', 170)))
+        c.drawOval(skia.Rect(-30, -80, 30, 0), P(color=col('#9fd3ff', 200), stroke=3))
+        c.restore()
+    body = skia.Rect(-80, -60, 70, 60)
+    c.save(); clip = skia.Path(); clip.addOval(body); c.clipPath(clip, doAntiAlias=True)
+    c.drawOval(body, rad(-20, -30, 120, [col('#fff07a'), col('#ffc93c')]))
+    for sx in (-45, -5):
+        c.drawRect(skia.Rect(sx, -70, sx + 22, 70), P(color=col('#3a2a1a')))
+    c.restore()
+    c.drawOval(body, P(color=col('#3a2a1a', 160), stroke=3))
+    st = skia.Path(); st.moveTo(-78, -8); st.lineTo(-104, 0); st.lineTo(-78, 8); st.close()
+    c.drawPath(st, P(color=col('#3a2a1a')))
+    hx = 78
+    c.drawCircle(hx, -5, 52, rad(hx - 15, -20, 70, [col('#fff07a'), col('#ffc93c')]))
+    c.drawCircle(hx, -5, 52, P(color=col('#3a2a1a', 160), stroke=3))
+    for ax in (-12, 18):
+        a = skia.Path(); a.moveTo(hx + ax, -52); a.quadTo(hx + ax + 10, -90, hx + ax + 24, -92)
+        c.drawPath(a, P(color=col('#3a2a1a'), stroke=5)); c.drawCircle(hx + ax + 24, -92, 8, P(color=col('#3a2a1a')))
+    if cheeks_full > 0:
+        c.drawCircle(hx + 30, 15, 14 * cheeks_full, P(color=col('#ffb703', 200)))
+    face(c, hx + 6, 0, 46, t, seed, mood)
+    c.restore()
+
+def hexagon_path(x, y, r):
+    p = skia.Path()
+    for i in range(6):
+        a = math.radians(60 * i + 30)
+        (p.moveTo if i == 0 else p.lineTo)(x + math.cos(a) * r, y + math.sin(a) * r)
+    p.close(); return p
+
+def honeycomb(c, x0, y0, cols_, rows, r, fill=None, t=0.0):
+    """Grid of hexagon cells. fill(i, j) -> (honey 0..1, capped 0..1)."""
+    w = math.sqrt(3) * r
+    for j in range(rows):
+        for i in range(cols_):
+            x = x0 + i * w + (w / 2 if j % 2 else 0); y = y0 + j * r * 1.5
+            hx = hexagon_path(x, y, r * 0.94)
+            c.drawPath(hx, P(color=col('#ffe7a3')))
+            h, cap = fill(i, j) if fill else (0, 0)
+            if h > 0:
+                c.drawPath(hexagon_path(x, y, r * 0.78 * (0.4 + 0.6 * h)), P(color=col('#ffb703', int(140 + 115 * h))))
+                c.drawCircle(x - r * 0.2, y - r * 0.25, r * 0.12, P(color=col('#ffffff', int(150 * h))))
+            if cap > 0:
+                c.drawPath(hexagon_path(x, y, r * 0.8 * cap), P(color=col('#fff2c2')))
+                c.drawPath(hexagon_path(x, y, r * 0.8 * cap), P(color=col('#e0b04a'), stroke=3))
+            c.drawPath(hx, P(color=col('#d99a1e'), stroke=r * 0.12))
+
+def honey_jar(c, x, y, s, t, fill=1.0, face_on=True):
+    """x,y = bottom centre."""
+    c.save(); c.translate(x, y); c.scale(s, s)
+    body = skia.Rect(-110, -230, 110, 0)
+    c.drawRoundRect(body, 60, 60, P(color=col('#ffffff', 80)))
+    c.save(); clip = skia.Path(); clip.addRoundRect(body, 60, 60); c.clipPath(clip, doAntiAlias=True)
+    c.drawRect(skia.Rect(-120, -230 * fill, 120, 0), lin(c, (0, -230, 0, 0), [col('#ffcc33'), col('#e88a00')]))
+    c.restore()
+    c.drawRoundRect(body, 60, 60, P(color=col('#ffffff', 200), stroke=6))
+    c.drawRoundRect(skia.Rect(-95, -275, 95, -225), 16, 16, P(color=col('#ff6b6b')))
+    c.drawRoundRect(skia.Rect(-80, -140, 80, -60), 14, 14, P(color=col('#fff6dc')))
+    text_block(c, 'HONEY', 0, -100, size=40, fill='#c06a00', hi='#c06a00', stroke='#fff6dc')
+    if face_on and fill > 0.6: face(c, 0, -175, 55, t, 5)
+    c.restore()
+
+def beehive(c, x, y, s, t, face_on=True):
+    """Classic dome hive (skep), x,y = bottom centre."""
+    c.save(); c.translate(x, y); c.scale(s, s)
+    c.drawOval(skia.Rect(-190, -14, 190, 18), P(color=col('#000000', 50), blur=8))
+    dome = skia.Path(); dome.moveTo(-180, 0); dome.cubicTo(-200, -260, -110, -380, 0, -380); dome.cubicTo(110, -380, 200, -260, 180, 0); dome.close()
+    c.drawPath(dome, lin(c, (0, -380, 0, 0), [col('#f7c873'), col('#d9952e')]))
+    c.save(); c.clipPath(dome, doAntiAlias=True)
+    for k in range(1, 6):
+        yy = -380 + k * 66
+        c.drawLine(-220, yy, 220, yy, P(color=col('#b9771f'), stroke=8))
+    c.restore()
+    c.drawPath(dome, P(color=col('#a8661a'), stroke=6))
+    c.drawOval(skia.Rect(-45, -95, 45, -25), P(color=col('#4a2a0c')))
+    if face_on: face(c, 0, -230, 95, t, 6)
+    c.restore()
