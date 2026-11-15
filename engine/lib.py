@@ -805,3 +805,136 @@ def trail(c, pts_hist, hexcol, width=14):
         p = P(color=col(hexcol, int(170 * i / n)), stroke=max(1.0, width * i / n))
         p.setStrokeCap(skia.Paint.kButt_Cap)
         c.drawLine(*pts_hist[i - 1], *pts_hist[i], p)
+# ---------------- Leaves, seasons, storms (added for ep_008+) ----------------
+def mix_hx(h1, h2, t):
+    """Like mix_hex but returns a '#rrggbb' string (can be nested)."""
+    h1, h2 = h1.lstrip('#'), h2.lstrip('#')
+    return '#' + ''.join('%02x' % int(lerp(int(h1[i:i+2], 16), int(h2[i:i+2], 16), clamp(t))) for i in (0, 2, 4))
+
+AUTUMN = ['#ffd23f', '#ff9f1c', '#ff6b2c', '#e8382f', '#c9302c']
+
+def leaf_path(r):
+    """Pointed leaf shape, tip at (0,-r*1.5), stem end at (0, r)."""
+    p = skia.Path(); p.moveTo(0, r)
+    p.cubicTo(-r * 1.25, r * 0.55, -r * 1.05, -r * 0.9, 0, -r * 1.5)
+    p.cubicTo(r * 1.05, -r * 0.9, r * 1.25, r * 0.55, 0, r); p.close()
+    return p
+
+def leaf(c, x, y, s, t, colr='#5cc94a', seed=0, face_on=True, mood='happy', rot=0.0, alpha=255, layer=None):
+    """Cute leaf character, x,y = centre. colr can be any hex. layer=(hex, 0..1) draws a second colour on top (e.g. green 'blanket')."""
+    a = int(alpha); r = 60 * s
+    c.save(); c.translate(x, y); c.rotate(rot + math.sin(t * 1.8 + seed) * 5)
+    c.drawLine(0, r * 0.9, 0, r * 1.6, P(color=col('#8a5a2b', a), stroke=r * 0.12))
+    pth = leaf_path(r)
+    c.drawPath(pth, rad(-r * 0.3, -r * 0.5, r * 2.0, [col('#ffffff', a), col(colr, a), col(colr, a)], [0, 0.25, 1]))
+    if layer is not None and layer[1] > 0:
+        c.save(); c.clipPath(pth, doAntiAlias=True)
+        top = lerp(r * 1.1, -r * 1.6, layer[1])
+        c.drawRect(skia.Rect(-r * 1.5, top, r * 1.5, r * 1.2), rad(-r * 0.3, -r * 0.5, r * 2.0, [col('#b7f0a0', a), col(layer[0], a), col(layer[0], a)], [0, 0.25, 1]))
+        if layer[1] < 1: c.drawLine(-r * 1.5, top, r * 1.5, top, P(color=col('#2f8f3a', a), stroke=r * 0.08))
+        c.restore()
+    vein = col('#000000', int(a * 0.18))
+    c.drawLine(0, r * 0.9, 0, -r * 1.2, P(color=vein, stroke=r * 0.06))
+    for k, (yy, dx) in enumerate([(0.3, 0.55), (-0.25, 0.5), (-0.75, 0.32)]):
+        for sx in (-1, 1): c.drawLine(0, yy * r + r * 0.15, sx * dx * r, yy * r - r * 0.2, P(color=vein, stroke=r * 0.045))
+    c.drawPath(pth, P(color=col('#000000', int(a * 0.15)), stroke=max(2, r * 0.05)))
+    if face_on and a > 200: face(c, 0, -r * 0.05, r * 0.72, t, seed, mood)
+    c.restore()
+
+def leafy_tree(c, x, y, s, t, autumn=0.0, seed=0, bare=0.0, face_on=False, mood='happy'):
+    """Big round tree, x,y = trunk bottom. autumn 0..1 turns blobs from green to yellow/orange/red (staggered). bare 0..1 removes leaves."""
+    c.save(); c.translate(x, y); c.scale(s, s); c.rotate(math.sin(t * 1.2 + seed) * 1.2)
+    c.drawOval(skia.Rect(-170, -16, 170, 16), P(color=col('#000000', 45), blur=8))
+    tr = skia.Path(); tr.moveTo(-38, 0); tr.cubicTo(-28, -120, -24, -200, -20, -300); tr.lineTo(20, -300); tr.cubicTo(24, -200, 28, -120, 38, 0); tr.close()
+    c.drawPath(tr, lin(c, (-40, 0, 40, 0), [col('#8a5a2b'), col('#6b4423')], vertical=False))
+    for sx, ang in [(-1, -40), (1, 35), (-1, -65)]:
+        c.save(); c.translate(0, -230 - (ang == -65) * 60); c.rotate(ang)
+        c.drawLine(0, 0, 0, -130, P(color=col('#6b4423'), stroke=16)); c.restore()
+    rnd = random.Random(seed + 40)
+    blobs = [(0, -470, 120), (-120, -400, 100), (120, -395, 105), (-60, -540, 90), (75, -545, 92), (-170, -320, 75), (170, -315, 78), (0, -360, 100), (-55, -440, 80), (60, -455, 80)]
+    for i, (dx, dy, r) in enumerate(blobs):
+        k = clamp(autumn * 1.6 - rnd.random() * 0.6)
+        tgt = AUTUMN[(i + seed) % len(AUTUMN)]
+        g = mix_hex('#5cc94a', tgt, k); g2 = mix_hex('#2f8f3a', '#b5481c', k)
+        b = clamp(bare * 1.5 - rnd.random() * 0.5)
+        if b >= 1: continue
+        rr = r * (1 - b)
+        c.drawCircle(dx, dy, rr, rad(dx - rr * 0.3, dy - rr * 0.4, rr * 1.5, [g, g2]))
+    if face_on and bare < 0.5: face(c, 0, -420, 95, t, seed, mood)
+    c.restore()
+
+def falling_leaves(c, t, seed=3, n=10, colors=None, y0=0, y1=H, s=0.35, speed=90, alpha=255):
+    rnd = random.Random(seed); colors = colors or AUTUMN
+    for i in range(n):
+        x0 = rnd.uniform(0, W); ph = rnd.uniform(0, 1); sp = speed * rnd.uniform(0.7, 1.3)
+        y = y0 + ((t * sp + ph * (y1 - y0)) % (y1 - y0))
+        x = x0 + math.sin(t * 1.5 + i) * 60
+        leaf(c, x, y, s * rnd.uniform(0.7, 1.2), t, colors[i % len(colors)], i, face_on=False, rot=math.sin(t * 2 + i) * 40 + i * 30, alpha=alpha)
+
+def lightning_bolt(c, x0, y0, x1, y1, t=0.0, seed=0, w=26, alpha=255, branches=True):
+    """Zig-zag bolt from (x0,y0) to (x1,y1) with glow."""
+    rnd = random.Random(seed); n = 7; pts = [(x0, y0)]
+    for i in range(1, n):
+        u = i / n; pts.append((lerp(x0, x1, u) + rnd.uniform(-70, 70), lerp(y0, y1, u) + rnd.uniform(-20, 20)))
+    pts.append((x1, y1))
+    def poly(ps):
+        p = skia.Path(); p.moveTo(*ps[0])
+        for q in ps[1:]: p.lineTo(*q)
+        return p
+    paths = [(poly(pts), w)]
+    if branches:
+        for bi in (2, 4):
+            bx, by = pts[bi]; d = 1 if rnd.random() > 0.5 else -1
+            paths.append((poly([(bx, by), (bx + d * 70, by + 60), (bx + d * 60, by + 120), (bx + d * 120, by + 190)]), w * 0.5))
+    a = int(alpha)
+    for p, ww in paths: c.drawPath(p, P(color=col('#b9d9ff', int(a * 0.6)), stroke=ww * 3.2, blur=ww * 1.2))
+    for p, ww in paths: c.drawPath(p, P(color=col('#fff6a8', a), stroke=ww))
+    for p, ww in paths: c.drawPath(p, P(color=col('#ffffff', a), stroke=ww * 0.4))
+
+def sound_rings(c, x, y, t, start, n=4, colr='#ffffff', speed=420, life=1.2, w=14, a0=-60, sweep=120, both=True):
+    """Expanding sound-wave arcs, emitted from start, every 0.25 s."""
+    for i in range(n):
+        tt = t - start - i * 0.25
+        if tt < 0 or tt > life: continue
+        r = 60 + speed * tt; al = int(230 * (1 - tt / life))
+        for base in ([a0, a0 + 180] if both else [a0]):
+            pth = skia.Path(); pth.addArc(skia.Rect(x - r, y - r, x + r, y + r), base, sweep)
+            c.drawPath(pth, P(color=col(colr, al), stroke=w))
+
+def tilted_earth(c, x, y, r, t, tilt=23.5, sun_dir=None, face_on=True, mood='happy', spin=True, axis=True, night=0.55):
+    """Earth with a visible, tilted axis stick. tilt in degrees (positive = top leans right)."""
+    c.save(); c.translate(x, y); c.rotate(tilt)
+    if axis: c.drawLine(0, -r * 1.45, 0, r * 1.45, P(color=col('#ffffff', 220), stroke=max(3, r * 0.05)))
+    c.restore()
+    c.save(); c.translate(x, y); c.rotate(tilt)
+    earth(c, 0, 0, r, t, rot=(t * 0.12 if spin else 0), mood=mood, face_on=False, sun_dir=None if sun_dir is None else sun_dir - tilt, night=night)
+    c.restore()
+    if axis:
+        c.save(); c.translate(x, y); c.rotate(tilt)
+        c.drawCircle(0, -r * 1.45, max(5, r * 0.07), P(color=col('#ff6b6b')))
+        c.restore()
+    if face_on: face(c, x, y + r * 0.08, r * 0.8, t, 1.3, mood)
+
+def flashlight(c, x, y, ang, s=1.0, on=1.0):
+    """Torch whose lamp end is at x,y, pointing at angle ang (deg, 90 = straight down)."""
+    c.save(); c.translate(x, y); c.rotate(ang - 90); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(-32, -260, 32, -60), 22, 22, lin(c, (-32, 0, 32, 0), [col('#ff7b7b'), col('#d93a4a')], vertical=False))
+    hd = skia.Path(); hd.moveTo(-34, -70); hd.lineTo(-58, 0); hd.lineTo(58, 0); hd.lineTo(34, -70); hd.close()
+    c.drawPath(hd, lin(c, (-58, 0, 58, 0), [col('#c9d3e0'), col('#8d99ab')], vertical=False))
+    c.drawRect(skia.Rect(-56, -6, 56, 4), P(color=col('#fff6b0', int(255 * on))))
+    c.drawRoundRect(skia.Rect(-12, -200, 12, -170), 6, 6, P(color=col('#ffd23f')))
+    c.restore()
+
+def snowflake(c, x, y, r, t, seed=0, alpha=255):
+    c.save(); c.translate(x, y); c.rotate(t * 30 + seed * 20)
+    p = P(color=col('#ffffff', alpha), stroke=max(2, r * 0.14))
+    for k in range(6):
+        c.save(); c.rotate(k * 60); c.drawLine(0, 0, 0, -r, p); c.drawLine(0, -r * 0.55, r * 0.3, -r * 0.8, p); c.drawLine(0, -r * 0.55, -r * 0.3, -r * 0.8, p); c.restore()
+    c.restore()
+
+def snow(c, t, seed=4, n=40, y0=0, y1=H, alpha=230):
+    rnd = random.Random(seed)
+    for i in range(n):
+        x0 = rnd.uniform(0, W); ph = rnd.uniform(0, 1); sp = rnd.uniform(50, 110)
+        y = y0 + ((t * sp + ph * (y1 - y0)) % (y1 - y0)); x = x0 + math.sin(t + i) * 30
+        snowflake(c, x, y, rnd.uniform(8, 18), t, i, alpha)

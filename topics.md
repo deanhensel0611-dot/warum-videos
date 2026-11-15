@@ -10,9 +10,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How does a rainbow happen? → ep_005_how_does_a_rainbow_happen
 - [x] Why is the ocean salty? → ep_006_why_is_the_ocean_salty
 - [x] How do bees make honey? → ep_007_how_do_bees_make_honey
-- [ ] Why do leaves change color in autumn?
-- [ ] Why do we have seasons?
-- [ ] Where does thunder come from?
+- [x] Why do leaves change color in autumn? → ep_008_why_do_leaves_change_color_in_autumn
+- [x] Why do we have seasons? → ep_009_why_do_we_have_seasons
+- [x] Where does thunder come from? → ep_010_where_does_thunder_come_from
 - [ ] Why does ice float?
 - [ ] How do fish breathe underwater?
 - [ ] How does a caterpillar turn into a butterfly?
