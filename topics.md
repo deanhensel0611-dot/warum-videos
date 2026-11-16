@@ -13,9 +13,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why do leaves change color in autumn? → ep_008_why_do_leaves_change_color_in_autumn
 - [x] Why do we have seasons? → ep_009_why_do_we_have_seasons
 - [x] Where does thunder come from? → ep_010_where_does_thunder_come_from
-- [ ] Why does ice float?
-- [ ] How do fish breathe underwater?
-- [ ] How does a caterpillar turn into a butterfly?
+- [x] Why does ice float? → ep_011_why_does_ice_float
+- [x] How do fish breathe underwater? → ep_012_how_do_fish_breathe_underwater
+- [x] How does a caterpillar turn into a butterfly? → ep_013_how_does_a_caterpillar_turn_into_a_butterfly
 - [ ] Why do stars twinkle?
 - [ ] How do volcanoes work?
 - [ ] Why does the Sun shine?

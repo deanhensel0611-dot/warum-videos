@@ -938,3 +938,282 @@ def snow(c, t, seed=4, n=40, y0=0, y1=H, alpha=230):
         x0 = rnd.uniform(0, W); ph = rnd.uniform(0, 1); sp = rnd.uniform(50, 110)
         y = y0 + ((t * sp + ph * (y1 - y0)) % (y1 - y0)); x = x0 + math.sin(t + i) * 30
         snowflake(c, x, y, rnd.uniform(8, 18), t, i, alpha)
+
+# ---------------- Water, ice, fish, butterflies (added for ep_011+) ----------------
+def water_molecule(c, x, y, r, t, seed=0, rot=0.0, face_on=True, alpha=255, mood='happy'):
+    """Cute H2O: big blue oxygen ball with face, two small white hydrogen 'ears' (104.5 deg apart). rot in degrees."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(rot)
+    for sx in (-1, 1):
+        ang = math.radians(90 + sx * 52.25); hx, hy = math.cos(ang) * r * 1.0, -math.sin(ang) * r * 1.0
+        c.drawCircle(hx, hy, r * 0.52, rad(hx - r * 0.18, hy - r * 0.2, r * 0.8, [col('#ffffff', a), col('#f1f4fa', a), col('#c9d3e3', a)], [0, 0.5, 1]))
+        c.drawCircle(hx, hy, r * 0.52, P(color=col('#93a3bf', a), stroke=max(1.5, r * 0.06)))
+    c.drawCircle(0, 0, r, rad(-r * 0.3, -r * 0.35, r * 1.5, [col('#e6f7ff', a), col('#62c2ff', a), col('#2a86e0', a)], [0, 0.4, 1]))
+    c.drawCircle(0, 0, r, P(color=col('#1f6fc4', a), stroke=max(1.5, r * 0.06)))
+    c.drawOval(skia.Rect(-r * 0.6, -r * 0.72, -r * 0.15, -r * 0.42), P(color=col('#ffffff', int(a * 0.55)), blur=r * 0.05))
+    c.restore()
+    if face_on and a > 200: face(c, x, y + r * 0.12, r * 0.8, t, seed, mood)
+
+def ice_cube(c, x, y, s, t, seed=0, face_on=True, mood='happy', alpha=255, rot=0.0):
+    """Glassy ice cube with a face, x,y = centre of the front face (front face is 200*s wide)."""
+    a = int(alpha); r = 100 * s; d = r * 0.35
+    c.save(); c.translate(x, y); c.rotate(rot)
+    top = skia.Path(); top.moveTo(-r, -r); top.lineTo(-r + d, -r - d); top.lineTo(r + d, -r - d); top.lineTo(r, -r); top.close()
+    side = skia.Path(); side.moveTo(r, -r); side.lineTo(r + d, -r - d); side.lineTo(r + d, r - d); side.lineTo(r, r); side.close()
+    c.drawPath(top, lin(c, (0, -r - d, 0, -r), [col('#ffffff', a), col('#dff3ff', a)]))
+    c.drawPath(side, lin(c, (r, 0, r + d, 0), [col('#a9dcfa', a), col('#c9ebff', a)], vertical=False))
+    front = skia.Rect(-r, -r, r, r)
+    c.drawRoundRect(front, r * 0.14, r * 0.14, rad(-r * 0.4, -r * 0.5, r * 2.2, [col('#ffffff', a), col('#cdeeff', a), col('#8fd0f7', a)], [0, 0.45, 1]))
+    for p_ in (top, side): c.drawPath(p_, P(color=col('#7fbfe6', a), stroke=max(2, r * 0.03)))
+    c.drawRoundRect(front, r * 0.14, r * 0.14, P(color=col('#6fb3e0', a), stroke=max(2, r * 0.035)))
+    hl = skia.Path(); hl.moveTo(-r * 0.75, r * 0.35); hl.lineTo(-r * 0.75, -r * 0.7); hl.lineTo(-r * 0.3, -r * 0.7)
+    c.drawPath(hl, P(color=col('#ffffff', int(a * 0.85)), stroke=r * 0.09))
+    c.drawCircle(r * 0.62, r * 0.62, r * 0.07, P(color=col('#ffffff', int(a * 0.7))))
+    c.restore()
+    if face_on and a > 200: face(c, x, y + r * 0.1, r * 0.72, t, seed, mood)
+
+def bubble(c, x, y, r, alpha=200):
+    a = int(alpha)
+    c.drawCircle(x, y, r, P(color=col('#e9f8ff', int(a * 0.25))))
+    c.drawCircle(x, y, r, P(color=col('#ffffff', a), stroke=max(1.5, r * 0.13)))
+    c.drawArc(skia.Rect(x - r * 0.6, y - r * 0.6, x + r * 0.6, y + r * 0.6), 200, 60, False, P(color=col('#ffffff', a), stroke=max(1.5, r * 0.16)))
+
+def rising_bubbles(c, t, seed=5, n=14, x0=0, x1=W, y0=620, y1=1700, rmin=6, rmax=16, speed=120, alpha=190):
+    rnd = random.Random(seed)
+    for i in range(n):
+        bx = rnd.uniform(x0, x1); ph = rnd.uniform(0, 1); sp = speed * rnd.uniform(0.7, 1.3); r = rnd.uniform(rmin, rmax)
+        y = y1 - ((t * sp + ph * (y1 - y0)) % (y1 - y0))
+        bubble(c, bx + math.sin(t * 2 + i) * 12, y, r, alpha)
+
+def seaweed(c, x, y, h, t, seed=0, colr='#3fbf6a', w=26):
+    pth = skia.Path(); pth.moveTo(x, y)
+    for k in range(1, 9):
+        u = k / 8; pth.lineTo(x + math.sin(t * 1.6 + seed + u * 4) * 26 * u, y - h * u)
+    c.drawPath(pth, P(color=col(colr), stroke=w))
+    c.drawPath(pth, P(color=col('#ffffff', 45), stroke=w * 0.3))
+
+def underwater(c, t, seed=1, floor=1660, rays=True, weeds=True):
+    sky(c, '#4fd0ff', '#0b3f8f', mid='#1f8fe0')
+    if rays:
+        for i in range(5):
+            x = 120 + i * 230 + math.sin(t * 0.6 + i) * 40
+            p = skia.Path(); p.moveTo(x - 40, 0); p.lineTo(x + 40, 0); p.lineTo(x + 220, H); p.lineTo(x + 60, H); p.close()
+            c.drawPath(p, lin(c, (0, 0, 0, H), [col('#ffffff', 55), col('#ffffff', 0)]))
+    sand = skia.Path(); sand.moveTo(0, floor); sand.cubicTo(300, floor - 60, 650, floor + 40, W, floor - 30); sand.lineTo(W, H); sand.lineTo(0, H); sand.close()
+    c.drawPath(sand, lin(c, (0, floor - 60, 0, H), [col('#ffe3a3'), col('#e9b968')]))
+    rnd = random.Random(seed + 7)
+    for i in range(18):
+        sx, sy = rnd.uniform(0, W), rnd.uniform(floor + 30, H - 20)
+        c.drawOval(skia.Rect(sx - 9, sy - 5, sx + 9, sy + 5), P(color=col('#c99a4e', 140)))
+    if weeds:
+        for i, (wx, hh, cc) in enumerate([(70, 330, '#3fbf6a'), (130, 230, '#2fa65a'), (960, 300, '#3fbf6a'), (1010, 200, '#2fa65a'), (560, 150, '#47c96f')]):
+            seaweed(c, wx, floor + 40, hh, t, i * 1.7, cc)
+        for x, cc in [(300, '#ff8fab'), (780, '#ffb35c')]:
+            for k in range(5):
+                a = math.radians(-160 + k * 35)
+                c.drawLine(x, floor + 20, x + math.cos(a) * 60, floor + 20 + math.sin(a) * 70, P(color=col(cc), stroke=16))
+
+def fish(c, x, y, s, t, body='#ffc93c', belly='#fff2b3', fin='#ff7a45', flip=False, gill=0.0, mouth=0.0, seed=0, kind='fish', stripes=True, wiggle=1.0):
+    """Side-view cute fish facing right (flip=True faces left). x,y = body centre. gill 0..1 opens the gill flap; mouth 0..1 opens the mouth.
+    kind='shark' draws a friendly rounded shark."""
+    c.save(); c.translate(x, y); c.scale(-s if flip else s, s)
+    wag = math.sin(t * 7 + seed) * 12 * wiggle
+    shark = kind == 'shark'
+    L = 190 if shark else 130; Hh = 70 if shark else 80
+    if shark: body, belly, fin = '#7fa6c9', '#eef5fb', '#5f86ab'
+    # tail
+    c.save(); c.translate(-L + 15, 0); c.rotate(wag)
+    tl = skia.Path()
+    if shark:
+        tl.moveTo(10, 0); tl.cubicTo(-30, -20, -70, -70, -95, -105); tl.cubicTo(-80, -40, -70, -10, -60, 5); tl.cubicTo(-70, 30, -80, 55, -75, 70); tl.cubicTo(-50, 40, -20, 20, 10, 0)
+    else:
+        tl.moveTo(10, 0); tl.cubicTo(-30, -30, -70, -85, -90, -80); tl.cubicTo(-70, -30, -70, 30, -90, 80); tl.cubicTo(-70, 85, -30, 30, 10, 0)
+    tl.close(); c.drawPath(tl, lin(c, (-90, 0, 10, 0), [col(fin), col(mix_hx(fin, '#ffffff', 0.25))], vertical=False))
+    c.drawPath(tl, P(color=col('#000000', 40), stroke=4))
+    c.restore()
+    # top & bottom fins
+    tf = skia.Path()
+    if shark: tf.moveTo(-60, -Hh + 12); tf.cubicTo(-40, -Hh - 40, -10, -Hh - 95, 10, -Hh - 100); tf.cubicTo(5, -Hh - 50, 20, -Hh - 10, 40, -Hh + 8)
+    else: tf.moveTo(-70, -Hh + 20); tf.cubicTo(-50, -Hh - 50, 20, -Hh - 45, 40, -Hh + 12)
+    tf.close(); c.drawPath(tf, P(color=col(fin))); c.drawPath(tf, P(color=col('#000000', 40), stroke=4))
+    bf = skia.Path(); bf.moveTo(-50, Hh - 15); bf.cubicTo(-40, Hh + 35, 0, Hh + 30, 20, Hh - 8); bf.close()
+    c.drawPath(bf, P(color=col(fin))); c.drawPath(bf, P(color=col('#000000', 40), stroke=4))
+    # body
+    bp = skia.Path(); bp.moveTo(-L + 10, 0)
+    bp.cubicTo(-L + 30, -Hh * 1.1, L * 0.55, -Hh * 1.25, L, -Hh * 0.05)
+    bp.cubicTo(L * 0.55, Hh * 1.2, -L + 30, Hh * 1.05, -L + 10, 0); bp.close()
+    c.drawPath(bp, lin(c, (0, -Hh, 0, Hh), [col(mix_hx(body, '#ffffff', 0.25)), col(body), col(body), col(belly)], [0, 0.35, 0.62, 1]))
+    c.save(); c.clipPath(bp, doAntiAlias=True)
+    if stripes and not shark:
+        for sx_ in (-55, 5):
+            st = skia.Path(); st.moveTo(sx_, -Hh * 1.3); st.quadTo(sx_ + 22, 0, sx_, Hh * 1.3); st.lineTo(sx_ + 24, Hh * 1.3); st.quadTo(sx_ + 46, 0, sx_ + 24, -Hh * 1.3); st.close()
+            c.drawPath(st, P(color=col(mix_hx(body, '#ff6a00', 0.45), 150)))
+    if shark:
+        for k in range(4):
+            gx = L * 0.28 - k * 16; gp = skia.Path(); gp.moveTo(gx, -22); gp.quadTo(gx - 9, 0, gx, 22)
+            c.drawPath(gp, P(color=col('#3f6488', 170), stroke=4))
+    c.drawOval(skia.Rect(-L * 0.4, -Hh * 0.85, L * 0.3, -Hh * 0.45), P(color=col('#ffffff', 70), blur=8))
+    c.restore()
+    c.drawPath(bp, P(color=col('#000000', 45), stroke=4))
+    # gill flap (fish only)
+    if not shark:
+        gx = L * 0.35
+        if gill > 0:
+            for k in range(4):
+                gp = skia.Path(); gp.moveTo(gx - 6 - k * 7, -40 + k * 3); gp.quadTo(gx - 22 - k * 7, 0, gx - 6 - k * 7, 40 - k * 3)
+                c.drawPath(gp, P(color=col('#e8384f', int(230 * gill)), stroke=6))
+        c.save(); c.translate(gx, -48); c.rotate(-16 * gill)
+        fl = skia.Path(); fl.moveTo(0, 0); fl.quadTo(-26, 48, 0, 96)
+        c.drawPath(fl, P(color=col(mix_hx(body, '#7a3a10', 0.45)), stroke=7))
+        c.restore()
+    # eye
+    ex, ey, er = L * 0.62, -Hh * 0.22, (17 if shark else 22)
+    ph = (t * 0.7 + seed * 0.37) % 3.2
+    if ph < 0.12:
+        c.drawArc(skia.Rect(ex - er, ey - er * 0.5, ex + er, ey + er * 0.5), 10, 160, False, P(color=col('#2b1d0e'), stroke=5))
+    else:
+        c.drawCircle(ex, ey, er * 1.25, P(color=col('#ffffff')))
+        c.drawCircle(ex + 3, ey, er * 0.85, P(color=col('#2b1d0e')))
+        c.drawCircle(ex - 2, ey - er * 0.35, er * 0.32, P(color=col('#ffffff')))
+        c.drawCircle(ex + er * 0.3, ey + er * 0.3, er * 0.14, P(color=col('#ffffff')))
+    c.drawOval(skia.Rect(ex - 22, ey + er + 4, ex + 8, ey + er + 22), P(color=col('#ff6f8a', 150), blur=3))
+    # mouth
+    mx, my = L * 0.9, Hh * 0.18
+    if mouth > 0.05:
+        c.drawOval(skia.Rect(mx - 26 * mouth, my - 18 * mouth, mx + 6, my + 18 * mouth), P(color=col('#7a2626')))
+        c.drawOval(skia.Rect(mx - 20 * mouth, my + 2, mx, my + 14 * mouth), P(color=col('#ff8a8a')))
+    else:
+        mp = skia.Path(); mp.moveTo(mx - 26, my - 2); mp.quadTo(mx - 12, my + 14, mx + 2, my - 4)
+        c.drawPath(mp, P(color=col('#5a1f1f'), stroke=5))
+    c.restore()
+
+def caterpillar_pts(x, y, s, t, n=7, hang=0.0, crawl=True, seed=0):
+    """Segment centres, tail first, head last. hang 0..1 morphs from crawling (head right) to a 'J' hanging from (x,y)."""
+    sp = 46 * s; out = []
+    for i in range(n):
+        u = i / (n - 1)
+        bump = (math.sin(t * 5 - i * 0.9 + seed) * 0.5 + 0.5) * 18 * s if crawl else 0
+        cx, cy = x - (n - 1 - i) * sp + (n - 1) * sp / 2, y - bump
+        # J: tail at the attach point, body goes straight down, head curls up
+        k = i * sp; straight = sp * (n - 1) * 0.6
+        if k <= straight: hx, hy = x, y + k
+        else:
+            a = (k - straight) / (sp * 1.6); R = sp * 1.6
+            hx, hy = x + R - R * math.cos(a), y + straight + R * math.sin(a)
+        out.append((lerp(cx, hx, hang), lerp(cy, hy, hang)))
+    return out
+
+def caterpillar(c, pts, s, t, seed=0, mood='happy', body='#7ed957', spot='#ffd23f', alpha=255, munch=0.0):
+    """Draw a caterpillar from caterpillar_pts (tail first, head last)."""
+    a = int(alpha); r = 34 * s
+    for i, (px, py) in enumerate(pts[:-1]):
+        rr = r * (0.8 + 0.2 * i / max(1, len(pts) - 2))
+        c.drawLine(px - rr * 0.35, py + rr * 0.8, px - rr * 0.45, py + rr * 1.15, P(color=col('#3f8a2c', a), stroke=rr * 0.22))
+        c.drawLine(px + rr * 0.35, py + rr * 0.8, px + rr * 0.45, py + rr * 1.15, P(color=col('#3f8a2c', a), stroke=rr * 0.22))
+    for i, (px, py) in enumerate(pts[:-1]):
+        rr = r * (0.8 + 0.2 * i / max(1, len(pts) - 2))
+        c.drawCircle(px, py, rr, rad(px - rr * 0.35, py - rr * 0.45, rr * 1.6, [col('#d9ffb8', a), col(body, a), col(mix_hx(body, '#1f5a1a', 0.45), a)], [0, 0.45, 1]))
+        c.drawCircle(px, py, rr, P(color=col('#2f6a22', int(a * 0.5)), stroke=max(1.5, rr * 0.07)))
+        c.drawCircle(px, py - rr * 0.35, rr * 0.18, P(color=col(spot, a)))
+    hx, hy = pts[-1]; px, py = pts[-2]; hr = r * 1.25
+    ang = math.degrees(math.atan2(hy - py, hx - px))
+    for sx in (-1, 1):
+        c.save(); c.translate(hx, hy); c.rotate(ang + 35)
+        ap = skia.Path(); ap.moveTo(sx * hr * 0.35, -hr * 0.8); ap.quadTo(sx * hr * 0.5, -hr * 1.5, sx * hr * 0.85, -hr * 1.6 + math.sin(t * 4 + sx) * 4)
+        c.drawPath(ap, P(color=col('#2f6a22', a), stroke=hr * 0.09))
+        c.drawCircle(sx * hr * 0.85, -hr * 1.6 + math.sin(t * 4 + sx) * 4, hr * 0.14, P(color=col('#ff6b6b', a)))
+        c.restore()
+    c.drawCircle(hx, hy, hr, rad(hx - hr * 0.35, hy - hr * 0.45, hr * 1.6, [col('#e6ffc9', a), col(body, a), col(mix_hx(body, '#1f5a1a', 0.4), a)], [0, 0.45, 1]))
+    c.drawCircle(hx, hy, hr, P(color=col('#2f6a22', int(a * 0.5)), stroke=max(1.5, hr * 0.06)))
+    if a > 200:
+        face(c, hx, hy + hr * 0.05, hr * 0.85, t, seed, 'wow' if munch > 0.5 else mood)
+
+def chrysalis_path(x, y, s):
+    """Hanging teardrop, attach point at x,y (top)."""
+    p = skia.Path(); p.moveTo(x, y + 40 * s)
+    p.cubicTo(x + 95 * s, y + 70 * s, x + 105 * s, y + 230 * s, x + 30 * s, y + 330 * s)
+    p.quadTo(x, y + 360 * s, x - 30 * s, y + 330 * s)
+    p.cubicTo(x - 105 * s, y + 230 * s, x - 95 * s, y + 70 * s, x, y + 40 * s); p.close()
+    return p
+
+def chrysalis(c, x, y, s, t, seed=0, shake=0.0, alpha=255, clear=0.0, face_on=True, mood='happy'):
+    """Green hanging chrysalis with gold dots; attach point (x,y). clear 0..1 makes it see-through (just before hatching)."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(math.sin(t * 9) * 6 * shake + math.sin(t * 1.3 + seed) * 2); c.translate(-x, -y)
+    c.drawLine(x, y - 10, x, y + 45 * s, P(color=col('#6b4423', a), stroke=8 * s))
+    p = chrysalis_path(x, y, s)
+    g1 = mix_hx('#9ef07a', '#ffcf8a', clear); g2 = mix_hx('#3fae4a', '#ff8a3d', clear)
+    c.drawPath(p, rad(x - 30 * s, y + 140 * s, 260 * s, [col('#e6ffd0', a), col(g1, a), col(g2, a)], [0, 0.35, 1]))
+    c.save(); c.clipPath(p, doAntiAlias=True)
+    c.drawLine(x - 90 * s, y + 120 * s, x + 90 * s, y + 120 * s, P(color=col('#2f8a3a', int(a * 0.45)), stroke=6 * s))
+    for k in range(-2, 3):
+        c.drawCircle(x + k * 26 * s, y + 120 * s, 7 * s, P(color=col('#ffd23f', a)))
+    c.drawOval(skia.Rect(x - 70 * s, y + 140 * s, x - 35 * s, y + 280 * s), P(color=col('#ffffff', int(a * 0.35)), blur=8 * s))
+    c.restore()
+    c.drawPath(p, P(color=col('#2f7a33', int(a * 0.6)), stroke=4 * s))
+    if face_on and a > 200: face(c, x, y + 215 * s, 62 * s, t, seed, mood)
+    c.restore()
+
+BUTTERFLY_WINGS = ('#ff9f1c', '#ffd23f', '#3a2a1a')
+
+def butterfly(c, x, y, s, t, flap=None, seed=0, colors=BUTTERFLY_WINGS, unfold=1.0, face_on=True, mood='happy', rot=0.0, alpha=255):
+    """Front-view butterfly, x,y = body centre. flap = 0..1 wing opening (None = auto flapping). unfold 0..1: crumpled -> full wings."""
+    a = int(alpha)
+    if flap is None: flap = 0.72 + 0.28 * math.cos(t * 9 + seed)
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    wc, wl, edge = colors
+    ws = 0.35 + 0.65 * unfold
+    for sx in (-1, 1):
+        c.save(); c.scale(sx * max(0.08, flap) * ws, ws)
+        up = skia.Path(); up.moveTo(8, -12); up.cubicTo(60, -150, 200, -170, 205, -95); up.cubicTo(210, -30, 120, 5, 8, 8); up.close()
+        lo = skia.Path(); lo.moveTo(8, 4); lo.cubicTo(110, 10, 170, 70, 140, 140); lo.cubicTo(110, 190, 30, 140, 8, 40); lo.close()
+        for wp, cx_, cy_, rr in ((lo, 70, 70, 140), (up, 110, -80, 170)):
+            c.drawPath(wp, rad(cx_ - 50, cy_ - 30, rr, [col(wl, a), col(wc, a)]))
+            c.save(); c.clipPath(wp, doAntiAlias=True)
+            c.drawPath(wp, P(color=col(edge, a), stroke=34))
+            c.restore()
+            c.drawPath(wp, P(color=col(edge, a), stroke=5))
+        for dx, dy, rr in ((180, -110, 9), (192, -80, 7), (170, -138, 7), (130, 140, 8), (100, 160, 6)):
+            c.drawCircle(dx, dy, rr, P(color=col('#ffffff', a)))
+        c.drawCircle(110, -70, 22, P(color=col('#ffffff', int(a * 0.35))))
+        c.restore()
+    bd = skia.Rect(-16, -60, 16, 110)
+    c.drawRoundRect(bd, 16, 16, lin(c, (-16, 0, 16, 0), [col('#5a4030', a), col('#2b1d14', a)], vertical=False))
+    for k in range(4): c.drawLine(-12, 10 + k * 22, 12, 10 + k * 22, P(color=col('#7a5a40', a), stroke=3))
+    for sx in (-1, 1):
+        ap = skia.Path(); ap.moveTo(sx * 10, -95); ap.quadTo(sx * 30, -160, sx * 60, -175 + math.sin(t * 3 + sx) * 4)
+        c.drawPath(ap, P(color=col('#2b1d14', a), stroke=5))
+        c.drawCircle(sx * 60, -175 + math.sin(t * 3 + sx) * 4, 10, P(color=col('#2b1d14', a)))
+    c.drawCircle(0, -85, 40, rad(-12, -100, 60, [col('#7a5a40', a), col('#3a2a1a', a)]))
+    if face_on and a > 200: face(c, 0, -82, 38, t, seed, mood)
+    c.restore()
+
+def egg(c, x, y, r, t, crack=0.0, alpha=255):
+    a = int(alpha)
+    p = skia.Path(); p.addOval(skia.Rect(x - r * 0.8, y - r, x + r * 0.8, y + r))
+    c.drawPath(p, rad(x - r * 0.3, y - r * 0.4, r * 1.6, [col('#ffffff', a), col('#fff3c9', a), col('#e9d48a', a)], [0, 0.5, 1]))
+    c.drawPath(p, P(color=col('#c9b060', a), stroke=max(1.5, r * 0.06)))
+    for k in range(5): c.drawLine(x - r * 0.4 + k * r * 0.2, y - r * 0.9, x - r * 0.45 + k * r * 0.22, y + r * 0.85, P(color=col('#d8c27a', int(a * 0.5)), stroke=max(1, r * 0.04)))
+    if crack > 0:
+        cp = skia.Path(); n = 6
+        for k in range(n + 1):
+            xx = x - r * 0.75 + k * r * 1.5 / n; yy = y - r * 0.2 + (r * 0.18 if k % 2 else -r * 0.1)
+            (cp.moveTo if k == 0 else cp.lineTo)(xx, yy)
+        c.save(); c.clipRect(skia.Rect(x - r, y - r * 1.2, x - r + 2 * r * crack, y + r))
+        c.drawPath(cp, P(color=col('#7a5a20', a), stroke=max(2, r * 0.08))); c.restore()
+
+def magnifier(c, cx, cy, r, inner, t=0.0, alpha=255):
+    """Round zoom lens: inner(c) draws the zoomed world, clipped to the circle."""
+    c.save(); clip = skia.Path(); clip.addCircle(cx, cy, r); c.clipPath(clip, doAntiAlias=True)
+    inner(c)
+    c.restore()
+    c.drawCircle(cx, cy, r, P(color=col('#ffffff', alpha), stroke=26))
+    c.drawCircle(cx, cy, r + 14, P(color=col('#3a5fa8', alpha), stroke=6))
+    c.drawArc(skia.Rect(cx - r + 40, cy - r + 40, cx + r - 40, cy + r - 40), 200, 50, False, P(color=col('#ffffff', 120), stroke=16))
+
+def oxygen_dot(c, x, y, r, t, seed=0, alpha=255, face_on=False, hexcol='#5ff0ff'):
+    """Small glowing oxygen bit."""
+    a = int(alpha)
+    c.drawCircle(x, y, r * 2.0, rad(x, y, r * 2.0, [col(hexcol, int(a * 0.55)), col(hexcol, 0)]))
+    c.drawCircle(x, y, r, rad(x - r * 0.35, y - r * 0.4, r * 1.6, [col('#ffffff', a), col(hexcol, a), col(mix_hx(hexcol, '#0a6a9a', 0.35), a)], [0, 0.4, 1]))
+    if face_on and a > 200: face(c, x, y + r * 0.08, r * 0.9, t, seed)
