@@ -16,9 +16,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why does ice float? → ep_011_why_does_ice_float
 - [x] How do fish breathe underwater? → ep_012_how_do_fish_breathe_underwater
 - [x] How does a caterpillar turn into a butterfly? → ep_013_how_does_a_caterpillar_turn_into_a_butterfly
-- [ ] Why do stars twinkle?
-- [ ] How do volcanoes work?
-- [ ] Why does the Sun shine?
+- [x] Why do stars twinkle? → ep_014_why_do_stars_twinkle
+- [x] How do volcanoes work? → ep_015_how_do_volcanoes_work
+- [x] Why does the Sun shine? → ep_016_why_does_the_sun_shine
 - [ ] How do airplanes stay in the air?
 - [ ] How do big ships float?
 - [ ] Why is grass green?

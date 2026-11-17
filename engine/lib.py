@@ -1217,3 +1217,124 @@ def oxygen_dot(c, x, y, r, t, seed=0, alpha=255, face_on=False, hexcol='#5ff0ff'
     c.drawCircle(x, y, r * 2.0, rad(x, y, r * 2.0, [col(hexcol, int(a * 0.55)), col(hexcol, 0)]))
     c.drawCircle(x, y, r, rad(x - r * 0.35, y - r * 0.4, r * 1.6, [col('#ffffff', a), col(hexcol, a), col(mix_hx(hexcol, '#0a6a9a', 0.35), a)], [0, 0.4, 1]))
     if face_on and a > 200: face(c, x, y + r * 0.08, r * 0.9, t, seed)
+
+# ---------------- Stars, volcanoes, Sun core (added for ep_014+) ----------------
+def star_path(r, inner=0.48, n=5):
+    p = skia.Path()
+    for k in range(2 * n):
+        ang = -math.pi / 2 + k * math.pi / n; rr = r if k % 2 == 0 else r * inner
+        (p.moveTo if k == 0 else p.lineTo)(math.cos(ang) * rr, math.sin(ang) * rr)
+    p.close(); return p
+
+def star_char(c, x, y, r, t, seed=0, mood='happy', face_on=True, bright=1.0, rot=0.0, alpha=255, glow=True,
+              body=('#fffbd6', '#ffe14d', '#ffb627'), edge='#f08c00'):
+    """Cute rounded 5-point star with a face. bright scales the glow (use for twinkling)."""
+    a = int(alpha)
+    if glow:
+        gr = r * (1.6 + 0.9 * bright)
+        c.drawCircle(x, y, gr, rad(x, y, gr, [col('#fff6b0', int(a * 0.55 * clamp(bright, 0, 1.5) / 1.5 + a * 0.15)), col('#fff6b0', 0)]))
+    c.save(); c.translate(x, y); c.rotate(rot)
+    pth = star_path(r)
+    fill = rad(-r * 0.25, -r * 0.35, r * 1.3, [col(body[0], a), col(body[1], a), col(body[2], a)], [0, 0.5, 1])
+    fill.setPathEffect(skia.CornerPathEffect.Make(r * 0.22))
+    c.drawPath(pth, fill)
+    st = P(color=col(edge, int(a * 0.8)), stroke=r * 0.05); st.setPathEffect(skia.CornerPathEffect.Make(r * 0.22))
+    c.drawPath(pth, st)
+    c.drawOval(skia.Rect(-r * 0.32, -r * 0.62, -r * 0.08, -r * 0.3), P(color=col('#ffffff', int(a * 0.55)), blur=r * 0.05))
+    c.restore()
+    if face_on and a > 200:
+        face(c, x, y + r * 0.08, r * 0.52, t, seed, mood)
+
+def twinkle(c, x, y, r, colr='#ffffff', alpha=255, rot=0.0):
+    """4-point sparkle (a 'twinkle' glint)."""
+    a = int(alpha)
+    c.drawCircle(x, y, r * 0.9, rad(x, y, r * 0.9, [col(colr, int(a * 0.6)), col(colr, 0)]))
+    c.save(); c.translate(x, y); c.rotate(rot)
+    p = skia.Path(); w = r * 0.16
+    p.moveTo(0, -r); p.quadTo(w, -w, r, 0); p.quadTo(w, w, 0, r); p.quadTo(-w, w, -r, 0); p.quadTo(-w, -w, 0, -r); p.close()
+    c.drawPath(p, P(color=col(colr, a)))
+    c.restore()
+    c.drawCircle(x, y, r * 0.14, P(color=col('#ffffff', a)))
+
+def night_sky(c, t, seed=21, n=90, y1=1450):
+    sky(c, '#0b1036', '#3b3f8f', mid='#1a1f5c'); stars(c, t, seed, n, y1=y1)
+
+def puff(c, x, y, r, alpha=200, colr='#e9e4f2', shade='#b9b0cc'):
+    """Soft round smoke/steam puff."""
+    a = int(alpha)
+    for dx, dy, k in [(-0.55, 0.15, 0.62), (0.55, 0.12, 0.66), (0.0, -0.2, 0.8), (-0.2, 0.3, 0.6), (0.3, 0.3, 0.6)]:
+        c.drawCircle(x + dx * r, y + (dy + 0.08) * r, k * r, P(color=col(shade, int(a * 0.6))))
+    for dx, dy, k in [(-0.55, 0.15, 0.62), (0.55, 0.12, 0.66), (0.0, -0.2, 0.8), (-0.2, 0.3, 0.6), (0.3, 0.3, 0.6)]:
+        c.drawCircle(x + dx * r, y + dy * r, k * r, P(color=col(colr, a)))
+    c.drawCircle(x - r * 0.15, y - r * 0.35, r * 0.32, P(color=col('#ffffff', int(a * 0.6)), blur=r * 0.08))
+
+def volcano_path(x, y, s, crater=1.0):
+    """Cone with a dip at the top. x,y = middle of the base."""
+    hw, h, cw = 470 * s, 560 * s, 120 * s * crater
+    p = skia.Path(); p.moveTo(x - hw, y)
+    p.cubicTo(x - hw * 0.62, y - h * 0.25, x - cw * 1.4, y - h * 0.82, x - cw, y - h)
+    p.quadTo(x, y - h + 38 * s, x + cw, y - h)
+    p.cubicTo(x + cw * 1.4, y - h * 0.82, x + hw * 0.62, y - h * 0.25, x + hw, y)
+    p.close(); return p
+
+def volcano(c, x, y, s, t, face_on=True, mood='happy', glow=0.4, lava_drips=0.0, snow=False, seed=0,
+            rock=('#b7774e', '#8a5236', '#5e3424')):
+    """Friendly volcano. glow = crater glow 0..1, lava_drips = 0..1 length of lava streams down the sides."""
+    h = 560 * s; cw = 120 * s
+    c.drawOval(skia.Rect(x - 520 * s, y - 25 * s, x + 520 * s, y + 25 * s), P(color=col('#000000', 45), blur=12 * s))
+    pth = volcano_path(x, y, s)
+    c.drawPath(pth, lin(c, (0, y - h, 0, y), [col(rock[0]), col(rock[1]), col(rock[2])], pos=[0, 0.55, 1]))
+    c.save(); c.clipPath(pth, doAntiAlias=True)
+    # side shading + ridges
+    c.drawRect(skia.Rect(x + 40 * s, y - h, x + 600 * s, y), lin(c, (x + 40 * s, 0, x + 520 * s, 0), [col('#3a1c10', 0), col('#3a1c10', 70)], vertical=False))
+    for k, (dx, ln) in enumerate([(-250, 0.55), (-110, 0.75), (60, 0.7), (230, 0.5)]):
+        rp = skia.Path(); x0 = x + dx * s * 0.35; rp.moveTo(x0, y - h * 0.86)
+        rp.quadTo(x + dx * s * 0.8, y - h * 0.5, x + dx * s * 1.3, y - h * (0.86 - ln))
+        c.drawPath(rp, P(color=col('#4a2616', 60), stroke=9 * s))
+    if snow:
+        sp = skia.Path(); sp.moveTo(x - 260 * s, y - h * 0.55)
+        for k in range(7):
+            sp.quadTo(x - 260 * s + (k + 0.5) * 520 * s / 7, y - h * (0.47 if k % 2 else 0.6), x - 260 * s + (k + 1) * 520 * s / 7, y - h * 0.55)
+        sp.lineTo(x + 300 * s, y - h - 50 * s); sp.lineTo(x - 300 * s, y - h - 50 * s); sp.close()
+        c.drawPath(sp, P(color=col('#ffffff', 235)))
+    if lava_drips > 0:
+        for k, (dx, ln, w) in enumerate([(-95, 0.55, 30), (95, 0.72, 36), (-55, 0.28, 26)]):
+            L = h * ln * ease_out(clamp(lava_drips * (1.2 - k * 0.1)))
+            lp = skia.Path(); x0 = x + dx * s; y0 = y - h + 10 * s
+            lp.moveTo(x0, y0)
+            for q in range(1, 9):
+                u = q / 8; yy = y0 + L * u; xx = x0 + dx * s * 1.6 * u + math.sin(u * 7 + k) * 14 * s
+                lp.lineTo(xx, yy)
+            p_ = P(stroke=w * s); p_.setShader(skia.GradientShader.MakeLinear(points=[(0, y0), (0, y0 + max(L, 1))], colors=[col('#ffe14d'), col('#ff7a1a'), col('#e8382f')]))
+            c.drawPath(lp, p_)
+            c.drawCircle(xx, yy, w * s * 0.62, P(color=col('#e8382f')))
+    c.restore()
+    # crater
+    c.drawOval(skia.Rect(x - cw, y - h - 18 * s, x + cw, y - h + 26 * s), P(color=col('#4a2616')))
+    if glow > 0:
+        c.drawOval(skia.Rect(x - cw * 0.85, y - h - 10 * s, x + cw * 0.85, y - h + 22 * s), rad(x, y - h + 6 * s, cw, [col('#fff3a0', int(255 * glow)), col('#ff8a1a', int(230 * glow)), col('#e8382f', int(120 * glow))]))
+        c.drawCircle(x, y - h, cw * 2.2, rad(x, y - h, cw * 2.2, [col('#ff9f1c', int(110 * glow)), col('#ff9f1c', 0)]))
+    c.drawPath(pth, P(color=col('#3a1c10', 90), stroke=5 * s))
+    if face_on:
+        face(c, x, y - h * 0.42, 150 * s, t, seed, mood)
+
+def magma_blob(c, x, y, r, t, seed=0, face_on=True, mood='happy', alpha=255, cool=0.0):
+    """Wobbly glowing blob of magma/lava. cool 0..1 turns it into dark rock."""
+    a = int(alpha)
+    if cool < 1:
+        c.drawCircle(x, y, r * 1.8, rad(x, y, r * 1.8, [col('#ff8a1a', int(a * 0.45 * (1 - cool))), col('#ff8a1a', 0)]))
+    p = skia.Path()
+    for k in range(25):
+        ang = k / 24 * 2 * math.pi
+        rr = r * (1 + 0.07 * math.sin(ang * 3 + t * 3 + seed) + 0.04 * math.sin(ang * 5 - t * 2 + seed * 2))
+        (p.moveTo if k == 0 else p.lineTo)(x + math.cos(ang) * rr, y + math.sin(ang) * rr)
+    p.close()
+    hot = rad(x - r * 0.3, y - r * 0.35, r * 1.5, [col(mix_hx('#fff3a0', '#8a8f9c', cool), a), col(mix_hx('#ff9f1c', '#5b5f6b', cool), a), col(mix_hx('#e8382f', '#3b3e47', cool), a)], [0, 0.45, 1])
+    hot.setPathEffect(skia.CornerPathEffect.Make(r * 0.3))
+    c.drawPath(p, hot)
+    if cool > 0.5:
+        for k in range(4):
+            ang = k * 1.7 + seed
+            c.drawCircle(x + math.cos(ang) * r * 0.55, y + math.sin(ang) * r * 0.5, r * 0.09, P(color=col('#2a2c33', int(a * (cool - 0.5) * 2))))
+    if face_on and a > 200:
+        face(c, x, y + r * 0.06, r * 0.82, t, seed, mood)
