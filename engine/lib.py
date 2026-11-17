@@ -268,33 +268,42 @@ def wrap(text, size, maxw):
     if cur: lines.append(cur)
     return lines
 
-def text_block(c, text, cx, cy, size=94, maxw=880, fill='#ffffff', hi='#ffe14d', stroke='#1b2a4a', scale=1.0, alpha=255):
-    """Wörter in GROSSBUCHSTABEN (>=3 Buchstaben) werden hervorgehoben."""
+def text_block(c, text, cx, cy, size=94, maxw=880, fill='#ffffff', hi='#ffe14d', stroke='#1b2a4a', scale=1.0, alpha=255, reveal=None):
+    """Wörter in GROSSBUCHSTABEN (>=3 Buchstaben) werden hervorgehoben.
+    reveal=None: alle Wörter voll. reveal=k (float): Wörter < k voll, Wort k aktiv (leicht größer), danach gedimmt."""
     lines = wrap(text, size, maxw); f = font(size); lh = size * 1.18
     c.save(); c.translate(cx, cy); c.scale(scale, scale)
     y0 = -lh * (len(lines) - 1) / 2 + size * 0.35
+    wi = 0
     for i, ln in enumerate(lines):
         words = ln.split(' '); widths = [f.measureText(w_) for w_ in words]; sp = f.measureText(' ')
         total = sum(widths) + sp * (len(words) - 1); x = -total / 2; y = y0 + i * lh
         for w_, ww in zip(words, widths):
             letters = ''.join(ch for ch in w_ if ch.isalpha())
             is_hi = len(letters) >= 3 and letters.isupper()
-            sp_ = P(color=col(stroke, alpha), stroke=size * 0.2)
-            c.drawString(w_, x, y, f, sp_)
-            c.drawString(w_, x, y, f, P(color=col(hi if is_hi else fill, alpha)))
-            x += ww + sp
+            a = alpha; pop = 1.0
+            if reveal is not None:
+                if wi > reveal: a = int(alpha * 0.45)
+                elif wi == int(reveal): pop = 1.0 + 0.10 * math.sin(math.pi * min(1.0, (reveal - int(reveal)) * 2.5))
+            c.save(); c.translate(x + ww / 2, y - size * 0.35); c.scale(pop, pop); c.translate(-(x + ww / 2), -(y - size * 0.35))
+            c.drawString(w_, x, y, f, P(color=col(stroke, a), stroke=size * 0.2))
+            c.drawString(w_, x, y, f, P(color=col(hi if is_hi else fill, a)))
+            c.restore()
+            x += ww + sp; wi += 1
     c.restore()
 
-def caption(c, text, t_since, y=430):
-    """Untertitel mit Pop-in. t_since = Sekunden seit Erscheinen."""
+def caption(c, text, t_since, y=430, dur=None):
+    """Untertitel mit Pop-in und Wort-für-Wort-Hervorhebung. t_since = Sekunden seit Sprechbeginn, dur = Dauer der Zeile."""
     if text is None or t_since < 0: return
     s = 0.55 + 0.45 * ease_back(prog(t_since, 0, 0.42), 2.2)
     yy = y + math.sin(t_since * 2.0) * 6
     al = int(255 * prog(t_since, 0, 0.15))
+    n = len(text.split())
+    reveal = None if not dur else min(n + 1.0, t_since / max(dur, 0.3) * n * 1.08)
     c.save(); c.translate(0, 10)
     text_block(c, text, W / 2, yy, scale=s, alpha=int(al * 0.35), fill='#0b1a3a', hi='#0b1a3a', stroke='#0b1a3a')
     c.restore()
-    text_block(c, text, W / 2, yy, scale=s, alpha=al)
+    text_block(c, text, W / 2, yy, scale=s, alpha=al, reveal=reveal)
 
 # ---------------- Audio ----------------
 def tts(text, out, speed=0.86):
@@ -375,7 +384,48 @@ def sfx(kind):
             seg = t[: len(t) - s]
             out[s:] += np.sin(2 * np.pi * fr * seg) * np.exp(-seg * 7)
         return out * 0.5
+    if kind == 'ding':      # channel signature: soft two-tone "aha"
+        d = 0.9; t = np.arange(int(SR * d)) / SR; out = np.zeros(len(t))
+        for m, off, g in [(88, 0.0, 1.0), (95, 0.07, 0.7)]:
+            s0 = int(SR * off); seg = t[: len(t) - s0]; fr = 440 * 2 ** ((m - 69) / 12)
+            out[s0:] += (np.sin(2 * np.pi * fr * seg) + 0.25 * np.sin(4 * np.pi * fr * seg)) * np.exp(-seg * 5.5) * g
+        return out * 0.45
+    if kind == 'click':
+        d = 0.05; t = np.arange(int(SR * d)) / SR
+        return np.sin(2 * np.pi * 2200 * t) * np.exp(-t * 120) * 0.6
+    if kind == 'chime':     # channel signature: outro
+        d = 1.4; t = np.arange(int(SR * d)) / SR; out = np.zeros(len(t))
+        for i, m in enumerate([76, 81, 85, 88]):
+            s0 = int(SR * i * 0.11); seg = t[: len(t) - s0]; fr = 440 * 2 ** ((m - 69) / 12)
+            out[s0:] += np.sin(2 * np.pi * fr * seg) * np.exp(-seg * 3.5)
+        return out * 0.3
     raise ValueError(kind)
+
+def ambience(kind, dur, seed=1):
+    """Soft background bed (not music): 'wind', 'water', 'space', 'forest'. Returns array at unit level."""
+    rng = np.random.default_rng(seed); n = int(SR * dur); t = np.arange(n) / SR
+    def lp(x, k):
+        return np.convolve(x, np.ones(k) / k, 'same')
+    if kind == 'wind':
+        x = lp(rng.standard_normal(n), 60) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.11 * t) * np.sin(2 * np.pi * 0.07 * t + 1))
+    elif kind == 'water':
+        x = lp(rng.standard_normal(n), 25) * 0.7
+        for _ in range(int(dur * 3)):
+            s0 = rng.integers(0, max(1, n - SR // 5)); f0 = rng.uniform(500, 1100); seg = np.arange(SR // 6) / SR
+            x[s0:s0 + len(seg)] += np.sin(2 * np.pi * (f0 + 2500 * seg) * seg) * np.exp(-seg * 30) * 0.5
+    elif kind == 'space':
+        x = (np.sin(2 * np.pi * 55 * t) + 0.6 * np.sin(2 * np.pi * 82.4 * t + 0.5) + 0.3 * np.sin(2 * np.pi * 110.3 * t)) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.05 * t))
+        x += lp(rng.standard_normal(n), 200) * 2
+    elif kind == 'forest':
+        x = lp(rng.standard_normal(n), 80) * 0.5
+        for _ in range(int(dur / 3)):
+            s0 = rng.integers(0, max(1, n - SR)); seg = np.arange(int(SR * 0.25)) / SR; f0 = rng.uniform(2500, 4000)
+            x[s0:s0 + len(seg)] += np.sin(2 * np.pi * (f0 + 600 * np.sin(2 * np.pi * 14 * seg)) * seg) * np.exp(-seg * 10) * 0.3
+    else:
+        raise ValueError(kind)
+    x /= (np.abs(x).max() + 1e-9)
+    fade = min(n // 2, SR); x[:fade] *= np.linspace(0, 1, fade); x[-fade:] *= np.linspace(1, 0, fade)
+    return x
 
 # ---------------- Episode-Pipeline ----------------
 def build(episode, outdir, workers=2):
@@ -409,7 +459,12 @@ def build(episode, outdir, workers=2):
         m = music(total); mus[:len(m)] = m
     # Ducking: Musik leiser, wenn gesprochen wird
     env = np.convolve(np.abs(v), np.ones(4410) / 4410, 'same'); duck = 1 - 0.55 * np.clip(env * 12, 0, 1)
-    mixed = v * 1.0 + mus * float(os.environ.get('WARUM_MUSIC_VOL', '0.16')) * duck + fx * 0.22
+    amb = np.zeros_like(v)
+    for tl, sc in zip(timeline, episode['scenes']):
+        kind = sc.get('ambience', episode.get('ambience'))
+        if kind:
+            a = ambience(kind, tl['D'] + 0.8, seed=tl['si'] + 1); s0 = int(SR * tl['start']); e = min(len(amb), s0 + len(a)); amb[s0:e] += a[:e - s0]
+    mixed = amb * 0.04 + v * 1.0 + mus * float(os.environ.get('WARUM_MUSIC_VOL', '0.16')) * duck + fx * 0.22
     mixed = mixed[:int(SR * total)]; mixed /= max(1.0, np.abs(mixed).max() / 0.95)
     audio = os.path.join(outdir, 'audio.wav'); write_wav(audio, mixed)
     json.dump([dict(si=t['si'], start=t['start'], D=t['D'], cues=t['cues']) for t in timeline],
@@ -428,7 +483,7 @@ def draw_full(sc, c, t, D, cues):
         cur = None
         for cu in cues:
             if t >= cu['start'] - 0.05: cur = cu
-        if cur: caption(c, cur['caption'], t - cur['start'] + 0.05, sc.get('cap_y', 430))
+        if cur: caption(c, cur['caption'], t - cur['start'] + 0.05, sc.get('cap_y', 430), cur['end'] - cur['start'])
     vignette(c)
 
 def render_scene(args):
@@ -449,6 +504,8 @@ def render_scene(args):
     if rc == 0: os.replace(tmp, final)
     return final
 
+TRANSITIONS = ['fade', 'slide', 'wipe', 'punch']  # cycled per scene -> no type more than twice in 8 scenes
+
 def render_into(c, ep, si, t, D, cues, prev):
     global FACES
     FACES = ep.get('faces', True)
@@ -457,9 +514,23 @@ def render_into(c, ep, si, t, D, cues, prev):
     sc = ep['scenes'][si]
     if prev is not None and t < XFADE:
         pD, pcues = prev
-        draw_full(ep['scenes'][si - 1], c, pD + t, pD + XFADE, pcues)
+        kind = sc.get('trans', TRANSITIONS[(si - 1) % len(TRANSITIONS)])
         a = ease_in_out(t / XFADE)
-        c.saveLayerAlpha(None, int(255 * a)); draw_full(sc, c, t, D, cues); c.restore()
+        if kind == 'slide':      # new scene pushes the old one up
+            c.save(); c.translate(0, -H * a); draw_full(ep['scenes'][si - 1], c, pD + t, pD + XFADE, pcues); c.restore()
+            c.save(); c.translate(0, H * (1 - a)); draw_full(sc, c, t, D, cues); c.restore()
+        elif kind == 'wipe':     # circle reveal from the centre
+            draw_full(ep['scenes'][si - 1], c, pD + t, pD + XFADE, pcues)
+            c.save(); pth = skia.Path(); pth.addCircle(W / 2, H / 2, math.hypot(W, H) / 2 * a); c.clipPath(pth, doAntiAlias=True)
+            draw_full(sc, c, t, D, cues); c.restore()
+        elif kind == 'punch':    # quick zoom-through
+            c.save(); z = 1 + 0.25 * a; c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2)
+            draw_full(ep['scenes'][si - 1], c, pD + t, pD + XFADE, pcues); c.restore()
+            c.saveLayerAlpha(None, int(255 * a)); c.save(); z = 0.85 + 0.15 * a
+            c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2); draw_full(sc, c, t, D, cues); c.restore(); c.restore()
+        else:
+            draw_full(ep['scenes'][si - 1], c, pD + t, pD + XFADE, pcues)
+            c.saveLayerAlpha(None, int(255 * a)); draw_full(sc, c, t, D, cues); c.restore()
     else:
         draw_full(sc, c, t, D, cues)
 
@@ -473,7 +544,7 @@ def assemble(outdir, n_scenes, audio, out):
         for i in range(n_scenes): f.write(f"file 'scene_{i:02d}.mp4'\n")
     tmp = out + '.tmp.mp4'
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-i', audio,
-                    '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest',
+                    '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-shortest',
                     '-movflags', '+faststart', tmp], check=True)
     os.replace(tmp, out)
 
