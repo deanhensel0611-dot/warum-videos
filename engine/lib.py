@@ -149,7 +149,10 @@ def vignette(c, a=70):
     c.drawRect(skia.Rect(0, 0, W, H), rad(W / 2, H / 2, H * 0.75, [col('#000000', 0), col('#000000', 0), col('#0b1a3a', a)], [0, 0.6, 1]))
 
 # ---------------- Figuren ----------------
+FACES = True  # set per episode via EPISODE['faces']; False = general-audience style without faces
+
 def face(c, x, y, r, t=0.0, blink_seed=0, mood='happy', look=(0, 0)):
+    if not FACES: return
     ex = r * 0.36; ey = -r * 0.12; er = r * 0.14
     ph = (t * 0.7 + blink_seed * 0.37) % 3.2
     blink = ph < 0.12
@@ -447,6 +450,8 @@ def render_scene(args):
     return final
 
 def render_into(c, ep, si, t, D, cues, prev):
+    global FACES
+    FACES = ep.get('faces', True)
     c.clear(skia.ColorWHITE)
     c.resetMatrix(); c.scale(OW / W, OH / H)
     sc = ep['scenes'][si]
