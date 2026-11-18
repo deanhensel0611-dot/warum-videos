@@ -24,14 +24,25 @@ Read before every new episode and apply it. The daily run updates this file (rul
 
 ## Experiments (≈20 % of videos)
 Maximum 1–2 parameters changed per day; each change is tested on at least 3 videos before it becomes a rule. Write active experiments here:
-- (none yet)
+- **E1 – Cold open (since 2026-11-18, ep_017–019, 0/3 measured):** scene 1 starts already in motion (plane flying, ship floating, grass swaying – no build-up from an empty stage), voice starts at 0.1 s (`lead=0.1` instead of 0.35), a number or claim shows on stage within ~1 s. Goal: fix the early drop-off (TikTok avg. watch time only 2.5–10 s on 63–71 s videos). Judge on TikTok avg. watch time + YouTube avg. view % vs. ep_010–016.
 
 ## Findings from the data
 Insights from fewer than 5 videos per feature are marked "uncertain". Separate style effects from topic and posting-time effects.
-- (no data yet – the channel is only a few days old)
+- 2026-11-18 (n=8 TikTok, 3 YouTube – all **uncertain**): TikTok videos with the old kids captions/hashtags (#scienceforkids #kidslearning, ep_003–007) got 67–76 views and only 2.5–4.6 s avg. watch time, 0 % full watches. The first two with general captions/hashtags (#science #learnontiktok, ep_012/013) got 359 / 135 views and 10.4 / 21.0 s avg. watch time. Confounded with posting time and video age (newer = less time to grow, so the gap may be bigger); the kid-format visuals were still the same. Fits Dean's switch to the general-audience format.
+- The biggest leak on every video is the first seconds (avg. watch time ≤ 10 % of length on most TikToks) → hook is the priority lever (experiment E1).
+- YouTube (n=3): avg. view percentage 47–58 % on the two Shorts with data – much better retention than TikTok; one Short (rainbow) has 0 views after 3 days (check audience/visibility setting).
 
 ## Change history
+- 2026-11-18: Experiment E1 (cold open + voice at 0.1 s) started on ep_017–019. First episodes in the new general-audience look (faces=False, no kid character). New lib props: airplane, airfoil + streamlines, arrow, label_pill, water_body, tank, steel_block/bowl, ship (cargo/carrier, load-line marks), grass_field.
 - 2026-11-17: Guide created. General-audience format (no faces), word-by-word captions, 4 transition types, signature sounds ding/chime, ambience beds, −14 LUFS.
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-18** (data: 8 TikToks + 3 YouTube Shorts, last 14 days via Windsor.ai)
+- Worked: general captions/hashtags – ep_012/013 on TikTok 135–359 views, 10–21 s avg. watch vs. 67–76 views and 2.5–4.6 s for the #kidslearning posts (n=2 vs 5 → uncertain; posting time + age confounded).
+- Didn't work: the opening seconds – most TikTok viewers leave within 3–5 s; 0 % full watches on 6 of 8 videos. Likes/shares/saves near zero → no signal yet.
+- YouTube holds viewers far better (47–58 % avg. view %), but the rainbow Short shows 0 views – worth checking its settings.
+- Change today (1 parameter): E1 cold open – scene 1 already in motion, voice at 0.1 s, a number/claim on stage within 1 s (ep_017–019).
+- Uncertain: everything about pacing, transitions, sound and topic – fewer than 5 videos per feature; posting-time effect not separable yet.
+- Tomorrow: keep E1 for 3 more videos; once ep_017–019 have ≥48 h of data, compare their first-seconds retention with ep_010–016.

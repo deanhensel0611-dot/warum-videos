@@ -19,9 +19,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why do stars twinkle? → ep_014_why_do_stars_twinkle
 - [x] How do volcanoes work? → ep_015_how_do_volcanoes_work
 - [x] Why does the Sun shine? → ep_016_why_does_the_sun_shine
-- [ ] How do airplanes stay in the air?
-- [ ] How do big ships float?
-- [ ] Why is grass green?
+- [x] How do airplanes stay in the air? → ep_017_how_do_airplanes_stay_in_the_air
+- [x] How do big ships float? → ep_018_how_do_big_ships_float
+- [x] Why is grass green? → ep_019_why_is_grass_green
 - [ ] How do plants eat?
 - [ ] Why do onions make you cry?
 - [ ] Why do we get goosebumps?

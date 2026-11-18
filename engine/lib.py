@@ -1414,3 +1414,198 @@ def magma_blob(c, x, y, r, t, seed=0, face_on=True, mood='happy', alpha=255, coo
             c.drawCircle(x + math.cos(ang) * r * 0.55, y + math.sin(ang) * r * 0.5, r * 0.09, P(color=col('#2a2c33', int(a * (cool - 0.5) * 2))))
     if face_on and a > 200:
         face(c, x, y + r * 0.06, r * 0.82, t, seed, mood)
+
+# ---------------- Flight, ships, plants (added for ep_017+) ----------------
+def airplane(c, x, y, s=1.0, rot=0.0, t=0.0, body='#ffffff', accent='#ff5c85', wing='#2f9bff', alpha=255, flame=False):
+    """Side-view jet airliner, nose pointing right. x,y = centre, s=1 -> ~520 px long. rot in degrees (positive = nose down)."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    # far wing (behind fuselage)
+    fw = skia.Path(); fw.moveTo(30, -10); fw.lineTo(-70, -95); fw.lineTo(-40, -95); fw.lineTo(90, -10); fw.close()
+    c.drawPath(fw, P(color=mix_hex(wing, '#1b2a4a', 0.35, a)))
+    # tail fin
+    tf = skia.Path(); tf.moveTo(-200, -20); tf.lineTo(-262, -150); tf.lineTo(-222, -150); tf.lineTo(-140, -22); tf.close()
+    c.drawPath(tf, lin(c, (0, -150, 0, -20), [col(accent, a), col(mix_hx(accent, '#b8183f', 0.5), a)]))
+    # fuselage
+    fu = skia.Path(); fu.moveTo(-250, -18)
+    fu.cubicTo(-120, -40, 150, -42, 215, -30); fu.cubicTo(262, -22, 272, 6, 250, 18)
+    fu.cubicTo(200, 34, -100, 34, -200, 18); fu.lineTo(-262, -6); fu.close()
+    c.drawPath(fu, lin(c, (0, -42, 0, 34), [col(body, a), col('#dfe8f5', a)]))
+    c.drawPath(fu, P(color=col('#1b2a4a', int(a * 0.25)), stroke=3))
+    # cheat line + windows
+    c.drawRect(skia.Rect(-210, 8, 230, 14), P(color=col(accent, int(a * 0.9))))
+    for i in range(16):
+        wx = -170 + i * 22
+        c.drawRoundRect(skia.Rect(wx, -14, wx + 11, -2), 4, 4, P(color=col('#1b2a4a', int(a * 0.8))))
+    cp = skia.Path(); cp.moveTo(218, -24); cp.quadTo(240, -22, 250, -10); cp.lineTo(222, -10); cp.close()
+    c.drawPath(cp, P(color=col('#1b2a4a', a)))
+    # tailplane
+    tp = skia.Path(); tp.moveTo(-190, -4); tp.lineTo(-270, 12); tp.lineTo(-240, 14); tp.lineTo(-160, 4); tp.close()
+    c.drawPath(tp, P(color=col(mix_hx(wing, '#1b2a4a', 0.2), a)))
+    # near wing
+    nw = skia.Path(); nw.moveTo(40, 8); nw.lineTo(-90, 120); nw.lineTo(-50, 122); nw.lineTo(105, 12); nw.close()
+    c.drawPath(nw, lin(c, (0, 8, 0, 122), [col(wing, a), col(mix_hx(wing, '#1b2a4a', 0.3), a)]))
+    # engine under near wing
+    c.drawRoundRect(skia.Rect(-20, 40, 60, 70), 15, 15, lin(c, (0, 40, 0, 70), [col('#e9eef6', a), col('#b8c4d6', a)]))
+    c.drawOval(skia.Rect(52, 41, 66, 69), P(color=col('#1b2a4a', a)))
+    if flame:
+        fl = 0.7 + 0.3 * math.sin(t * 40)
+        c.drawOval(skia.Rect(-20 - 60 * fl, 46, -14, 64), rad(-20, 55, 60, [col('#fff3a0', int(a * 0.8)), col('#ffffff', 0)]))
+    c.restore()
+
+def airfoil_path(cx, cy, chord, thick=0.13, camber=0.06):
+    """Cambered wing cross-section centred on (cx,cy), leading edge on the left."""
+    n = 40; up = []; lo = []
+    for i in range(n + 1):
+        u = (1 - math.cos(math.pi * i / n)) / 2
+        yt = 5 * thick * (0.2969 * math.sqrt(u) - 0.126 * u - 0.3516 * u * u + 0.2843 * u ** 3 - 0.1036 * u ** 4)
+        yc = camber * (2 * 0.4 * u - u * u) / 0.16 if u < 0.4 else camber * ((1 - 0.8) + 0.8 * u - u * u) / 0.36
+        x = cx + (u - 0.5) * chord
+        up.append((x, cy - (yc + yt) * chord)); lo.append((x, cy - (yc - yt) * chord))
+    p = skia.Path(); p.moveTo(*up[0])
+    for q in up[1:]: p.lineTo(*q)
+    for q in reversed(lo): p.lineTo(*q)
+    p.close()
+    return p
+
+def draw_airfoil(c, cx, cy, chord, aoa=6.0, colr='#ffffff', alpha=255):
+    c.save(); c.translate(cx, cy); c.rotate(aoa); c.translate(-cx, -cy)
+    p = airfoil_path(cx, cy, chord)
+    c.drawPath(p, P(color=col('#0b1a3a', int(alpha * 0.25)), blur=10))
+    c.drawPath(p, lin(c, (0, cy - chord * 0.15, 0, cy + chord * 0.08), [col(colr, alpha), col('#c9d6ea', alpha)]))
+    c.drawPath(p, P(color=col('#1b2a4a', int(alpha * 0.7)), stroke=5))
+    c.restore()
+
+def arrow(c, x0, y0, x1, y1, colr='#ffffff', w=16, alpha=255, head=1.0):
+    """Straight arrow with rounded shaft and a solid head."""
+    L = math.hypot(x1 - x0, y1 - y0)
+    if L < 1: return
+    ux, uy = (x1 - x0) / L, (y1 - y0) / L; hl = w * 2.4 * head; hw = w * 1.7 * head
+    bx, by = x1 - ux * hl, y1 - uy * hl
+    c.drawLine(x0, y0, bx + ux * 2, by + uy * 2, P(color=col(colr, alpha), stroke=w))
+    p = skia.Path(); p.moveTo(x1, y1); p.lineTo(bx - uy * hw, by + ux * hw); p.lineTo(bx + uy * hw, by - ux * hw); p.close()
+    c.drawPath(p, P(color=col(colr, alpha)))
+
+def label_pill(c, text, x, y, size=54, fill='#1b2a4a', bg='#ffffff', k=1.0, alpha=240, hi=None):
+    """White rounded label (used for on-stage annotations)."""
+    if k <= 0: return
+    w_ = font(size).measureText(text) / 2 + size * 0.6
+    c.save(); c.translate(x, y); c.scale(k, k)
+    c.drawRoundRect(skia.Rect(-w_, -size * 0.8, w_, size * 0.8), size * 0.8, size * 0.8, P(color=col('#0b1a3a', int(50 * alpha / 240)), blur=8))
+    c.drawRoundRect(skia.Rect(-w_, -size * 0.8, w_, size * 0.8), size * 0.8, size * 0.8, P(color=col(bg, alpha)))
+    text_block(c, text, 0, 0, size=size, fill=fill, hi=hi or fill, stroke=bg, maxw=2000, alpha=min(255, int(alpha * 255 / 240)))
+    c.restore()
+
+def water_body(c, y, t, x0=0, x1=W, y1=H, c1='#4fb3ff', c2='#1a5fc9', amp=10, a=255):
+    """Water surface with gentle waves from x0..x1, filled down to y1."""
+    p = skia.Path(); p.moveTo(x0, y1); p.lineTo(x0, y)
+    steps = 48
+    for i in range(steps + 1):
+        x = lerp(x0, x1, i / steps)
+        p.lineTo(x, y + math.sin(x * 0.012 + t * 2.0) * amp + math.sin(x * 0.031 - t * 1.3) * amp * 0.4)
+    p.lineTo(x1, y1); p.close()
+    c.drawPath(p, lin(c, (0, y - amp, 0, y1), [col(c1, a), col(c2, a)]))
+    hl = skia.Path(); first = True
+    for i in range(steps + 1):
+        x = lerp(x0, x1, i / steps); yy = y + math.sin(x * 0.012 + t * 2.0) * amp + math.sin(x * 0.031 - t * 1.3) * amp * 0.4
+        (hl.moveTo if first else hl.lineTo)(x, yy); first = False
+    c.drawPath(hl, P(color=col('#ffffff', int(a * 0.7)), stroke=6))
+
+def water_level(x, y, t, amp=10):
+    return y + math.sin(x * 0.012 + t * 2.0) * amp + math.sin(x * 0.031 - t * 1.3) * amp * 0.4
+
+def tank(c, x0, y0, x1, y1, level, t, water=True, front=False):
+    """Glass tank. Call with front=False before contents (back + water), front=True after (glass rim)."""
+    if not front:
+        c.drawRoundRect(skia.Rect(x0, y0, x1, y1), 26, 26, P(color=col('#ffffff', 60)))
+        if water:
+            c.save(); cl = skia.Path(); cl.addRoundRect(skia.Rect(x0 + 6, y0, x1 - 6, y1 - 6), 22, 22); c.clipPath(cl, doAntiAlias=True)
+            water_body(c, level, t, x0, x1, y1, amp=6, a=215)
+            c.restore()
+    else:
+        c.drawRoundRect(skia.Rect(x0, y0, x1, y1), 26, 26, P(color=col('#ffffff', 230), stroke=10))
+        c.drawLine(x0 + 30, y0 + 40, x0 + 30, y1 - 60, P(color=col('#ffffff', 110), stroke=10))
+
+def steel_block(c, x, y, w_, h_, rot=0.0, alpha=255):
+    c.save(); c.translate(x, y); c.rotate(rot)
+    r = skia.Rect(-w_ / 2, -h_ / 2, w_ / 2, h_ / 2)
+    c.drawRoundRect(r, 14, 14, lin(c, (0, -h_ / 2, 0, h_ / 2), [col('#c9d3df', alpha), col('#7d8a9c', alpha)]))
+    c.drawRoundRect(r, 14, 14, P(color=col('#4a566a', alpha), stroke=5))
+    c.drawLine(-w_ / 2 + 18, -h_ / 2 + 16, w_ / 2 - 30, -h_ / 2 + 16, P(color=col('#ffffff', int(alpha * 0.6)), stroke=6))
+    c.restore()
+
+def steel_bowl(c, x, y, w_, h_, rot=0.0, alpha=255, fill=0.0, t=0.0):
+    """Open steel bowl / hull cross-section; x,y = centre of the rim line. fill 0..1 = water inside."""
+    c.save(); c.translate(x, y); c.rotate(rot)
+    outer = skia.Path(); outer.moveTo(-w_ / 2, 0); outer.cubicTo(-w_ / 2, h_ * 1.25, w_ / 2, h_ * 1.25, w_ / 2, 0); outer.close()
+    th = 16
+    inner = skia.Path(); inner.moveTo(-w_ / 2 + th, 0); inner.cubicTo(-w_ / 2 + th, h_ * 1.25 - th * 1.6, w_ / 2 - th, h_ * 1.25 - th * 1.6, w_ / 2 - th, 0); inner.close()
+    c.drawPath(outer, lin(c, (0, 0, 0, h_), [col('#c9d3df', alpha), col('#7d8a9c', alpha)]))
+    c.drawPath(inner, P(color=col('#eaf6ff', int(alpha * 0.85))))
+    if fill > 0:
+        c.save(); c.clipPath(inner, doAntiAlias=True)
+        top = lerp(h_ * 0.95, 0, fill)
+        c.drawRect(skia.Rect(-w_, top, w_, h_ * 2), lin(c, (0, top, 0, h_), [col('#4fb3ff', alpha), col('#1a5fc9', alpha)]))
+        c.restore()
+    c.drawPath(outer, P(color=col('#4a566a', alpha), stroke=5))
+    c.drawLine(-w_ / 2 - 6, 0, -w_ / 2 + th + 4, 0, P(color=col('#4a566a', alpha), stroke=10))
+    c.drawLine(w_ / 2 - th - 4, 0, w_ / 2 + 6, 0, P(color=col('#4a566a', alpha), stroke=10))
+    c.restore()
+
+def ship(c, x, y, s=1.0, t=0.0, kind='cargo', rock=True, alpha=255, marks=False):
+    """Side-view ship. x,y = waterline centre at s=1 (hull draft ~70 px below). kind 'cargo' | 'carrier'."""
+    a = int(alpha); ang = math.sin(t * 1.3) * 1.2 if rock else 0
+    c.save(); c.translate(x, y + (math.sin(t * 1.7) * 4 if rock else 0)); c.rotate(ang); c.scale(s, s)
+    hull = skia.Path(); hull.moveTo(-330, -70); hull.lineTo(330, -70); hull.lineTo(360, -110)
+    hull.lineTo(375, -110); hull.cubicTo(360, 20, 300, 70, 250, 70); hull.lineTo(-290, 70); hull.cubicTo(-320, 70, -335, 30, -340, -70); hull.close()
+    c.drawPath(hull, lin(c, (0, -110, 0, 70), [col('#1b2a4a', a), col('#0f1830', a)]))
+    # red underside below waterline
+    c.save(); c.clipPath(hull, doAntiAlias=True)
+    c.drawRect(skia.Rect(-400, 0, 400, 100), P(color=col('#e8394f', a)))
+    c.drawRect(skia.Rect(-400, -8, 400, 0), P(color=col('#ffffff', a)))
+    c.restore()
+    if marks:
+        mx = -150
+        c.drawCircle(mx, -26, 24, P(color=col('#ffffff', a), stroke=5)); c.drawLine(mx - 34, -26, mx + 34, -26, P(color=col('#ffffff', a), stroke=5))
+        for j, (dy, lab) in enumerate([(-50, 'F'), (-34, 'T'), (-18, 'S')]):
+            c.drawLine(mx + 60, dy, mx + 110, dy, P(color=col('#ffffff', a), stroke=5))
+    if kind == 'carrier':
+        deck = skia.Path(); deck.moveTo(-360, -70); deck.lineTo(380, -70); deck.lineTo(380, -92); deck.lineTo(-380, -92); deck.close()
+        c.drawPath(deck, P(color=col('#5b6b82', a)))
+        c.drawLine(-320, -81, 340, -81, P(color=col('#ffffff', int(a * 0.6)), stroke=3))
+        c.drawRoundRect(skia.Rect(80, -190, 170, -92), 10, 10, lin(c, (0, -190, 0, -92), [col('#c9d3df', a), col('#8a97aa', a)]))
+        c.drawRect(skia.Rect(118, -235, 128, -190), P(color=col('#8a97aa', a)))
+        for i in range(3): c.drawRect(skia.Rect(92 + i * 26, -170, 108 + i * 26, -158), P(color=col('#1b2a4a', a)))
+    else:
+        # containers
+        cols_ = ['#ff5c85', '#ffd23f', '#2f9bff', '#ffffff', '#ff9f1c', '#2f9bff', '#ff5c85', '#ffd23f']
+        for i in range(8):
+            for j in range(2 if i % 3 else 3):
+                bx = -300 + i * 62; by = -70 - (j + 1) * 38
+                c.drawRoundRect(skia.Rect(bx, by, bx + 58, by + 35), 4, 4, P(color=col(cols_[(i + j * 3) % 8], a)))
+                for k in range(4): c.drawLine(bx + 10 + k * 12, by + 6, bx + 10 + k * 12, by + 29, P(color=col('#000000', int(a * 0.15)), stroke=3))
+        c.drawRoundRect(skia.Rect(210, -200, 300, -70), 10, 10, lin(c, (0, -200, 0, -70), [col('#ffffff', a), col('#dfe8f5', a)]))
+        for i in range(3): c.drawRect(skia.Rect(222 + i * 26, -185, 238 + i * 26, -172), P(color=col('#1b2a4a', a)))
+        c.drawRect(skia.Rect(230, -235, 262, -200), P(color=col('#ff5c85', a)))
+    c.restore()
+
+def grass_blade_path(x, y, h, w_, bend):
+    p = skia.Path(); p.moveTo(x - w_ / 2, y)
+    p.quadTo(x - w_ * 0.3 + bend * 0.5, y - h * 0.55, x + bend, y - h)
+    p.quadTo(x + w_ * 0.35 + bend * 0.5, y - h * 0.5, x + w_ / 2, y); p.close()
+    return p
+
+def grass_field(c, y, t, seed=3, n=70, hmin=120, hmax=260, x0=-20, x1=W + 20, dark=False, wind=1.0):
+    """Row of swaying grass blades standing on y."""
+    rnd = random.Random(seed)
+    greens = [('#7ed957', '#3f9a2e'), ('#5fc94a', '#2f7d24'), ('#9be36a', '#4fa83a')]
+    if dark: greens = [('#4fa83a', '#25601c'), ('#3f9a2e', '#1f5016')]
+    blades = []
+    for i in range(n):
+        blades.append((rnd.uniform(x0, x1), rnd.uniform(hmin, hmax), rnd.uniform(18, 30), rnd.random() * 6, rnd.choice(greens), rnd.uniform(-30, 30)))
+    blades.sort(key=lambda b: b[1])
+    for (bx, h, w_, ph, (g1, g2), lean) in blades:
+        bend = lean + math.sin(t * 1.6 + ph + bx * 0.004) * 22 * wind
+        p = grass_blade_path(bx, y + 4, h, w_, bend)
+        c.drawPath(p, lin(c, (0, y - h, 0, y), [col(g1), col(g2)]))
+    c.drawRect(skia.Rect(x0, y, x1, H), lin(c, (0, y, 0, H), [col('#3f9a2e'), col('#2a6b1f')]))
