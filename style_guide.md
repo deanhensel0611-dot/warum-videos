@@ -32,12 +32,25 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 - The biggest leak on every video is the first seconds (avg. watch time ≤ 10 % of length on most TikToks) → hook is the priority lever (experiment E1).
 - YouTube (n=3): avg. view percentage 47–58 % on the two Shorts with data – much better retention than TikTok; one Short (rainbow) has 0 views after 3 days (check audience/visibility setting).
 
+- 2026-11-19 (n=11 TikTok, 3 YouTube): the caption/hashtag gap holds with more data – general captions (#science #learnontiktok, ep_008–013, n=6) 290–423 views and 8.0–20.0 s avg. watch vs. #kidslearning posts (ep_003–007, n=5) 68–77 views and 3.3–5.5 s. Now n≥5 on both sides → **likely real**, but still confounded with posting date (all general-caption posts came later). Kept as rule: general-audience captions/hashtags only.
+- Within the general-caption group, avg. watch time splits in two: caterpillar 20.0 s and leaves 19.5 s vs. thunder 8.0 s, seasons 8.7 s, ice 9.5 s, fish 10.4 s. Both strong ones are nature/biology topics with a visible transformation – could be topic, not style (n=2 → **uncertain**).
+- E1 (cold open) still has no data: ep_017–019 are not on TikTok yet and not in the YouTube data (0/3 measured).
+
 ## Change history
+- 2026-11-19: No new style change (E1 still unmeasured). E1 cold open continued on ep_020–022. New lib props: co2_molecule, sugar_cubes, soil, root_paths, plant, stoma, onion, knife, cutting_board, gas_wisp, human_eye (plain, with tears), skin_section (hair follicles + arrector pili, goosebump bumps).
 - 2026-11-18: Experiment E1 (cold open + voice at 0.1 s) started on ep_017–019. First episodes in the new general-audience look (faces=False, no kid character). New lib props: airplane, airfoil + streamlines, arrow, label_pill, water_body, tank, steel_block/bowl, ship (cargo/carrier, load-line marks), grass_field.
 - 2026-11-17: Guide created. General-audience format (no faces), word-by-word captions, 4 transition types, signature sounds ding/chime, ambience beds, −14 LUFS.
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-19** (data: 11 TikToks + 3 YouTube Shorts, last 14 days via Windsor.ai)
+- Worked: general captions/hashtags – 6 posts with 290–423 views and 8–20 s avg. watch vs. 68–77 views and 3–5 s for the 5 #kidslearning posts (now n≥5 each → likely real; posting date still confounded).
+- Best watch time: caterpillar (20.0 s) and autumn leaves (19.5 s) – both biology topics with a visible transformation; possibly a topic effect (uncertain, n=2).
+- Didn't work: the first seconds are still the leak – avg. watch is 6–30 % of the 61–69 s length on every TikTok; likes/comments/shares near zero (seasons: 13 likes, best so far).
+- YouTube: no new data (still 3 Shorts; rainbow still 0 views). ep_017–019 not in the data yet.
+- Change today: none – E1 (cold open, voice at 0.1 s) has 0/3 measured videos, so ep_020–022 continue it.
+- Uncertain: pacing, transitions, sound, posting time. Tomorrow: measure E1 as soon as ep_017–019 have ≥48 h of TikTok data.
 
 **2026-11-18** (data: 8 TikToks + 3 YouTube Shorts, last 14 days via Windsor.ai)
 - Worked: general captions/hashtags – ep_012/013 on TikTok 135–359 views, 10–21 s avg. watch vs. 67–76 views and 2.5–4.6 s for the #kidslearning posts (n=2 vs 5 → uncertain; posting time + age confounded).

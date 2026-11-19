@@ -22,9 +22,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How do airplanes stay in the air? → ep_017_how_do_airplanes_stay_in_the_air
 - [x] How do big ships float? → ep_018_how_do_big_ships_float
 - [x] Why is grass green? → ep_019_why_is_grass_green
-- [ ] How do plants eat?
-- [ ] Why do onions make you cry?
-- [ ] Why do we get goosebumps?
+- [x] How do plants eat? → ep_020_how_do_plants_eat
+- [x] Why do onions make you cry? → ep_021_why_do_onions_make_you_cry
+- [x] Why do we get goosebumps? → ep_022_why_do_we_get_goosebumps
 - [ ] What makes the wind blow?
 - [ ] How do magnets work?
 - [ ] How does your heart work?

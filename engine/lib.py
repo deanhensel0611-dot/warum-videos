@@ -1609,3 +1609,206 @@ def grass_field(c, y, t, seed=3, n=70, hmin=120, hmax=260, x0=-20, x1=W + 20, da
         p = grass_blade_path(bx, y + 4, h, w_, bend)
         c.drawPath(p, lin(c, (0, y - h, 0, y), [col(g1), col(g2)]))
     c.drawRect(skia.Rect(x0, y, x1, H), lin(c, (0, y, 0, H), [col('#3f9a2e'), col('#2a6b1f')]))
+
+# ---------------- Plants, onions, skin (added for ep_020+) ----------------
+def co2_molecule(c, x, y, r, t, seed=0, alpha=255, rot=0.0):
+    """CO2: dark grey carbon in the middle, two red oxygens in a straight line (no face)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot + math.sin(t * 2 + seed) * 8)
+    for sx in (-1, 1):
+        ox = sx * r * 1.15
+        c.drawCircle(ox, 0, r * 0.78, rad(ox - r * 0.25, -r * 0.3, r * 1.2, [col('#ffd0d0', a), col('#ff5a5a', a), col('#c92a2a', a)], [0, 0.45, 1]))
+        c.drawCircle(ox, 0, r * 0.78, P(color=col('#9b1c1c', a), stroke=max(1.5, r * 0.07)))
+    c.drawCircle(0, 0, r * 0.82, rad(-r * 0.25, -r * 0.3, r * 1.3, [col('#c9ced8', a), col('#5b6476', a), col('#2c3240', a)], [0, 0.45, 1]))
+    c.drawCircle(0, 0, r * 0.82, P(color=col('#1d222c', a), stroke=max(1.5, r * 0.07)))
+    c.restore()
+
+def sugar_cubes(c, x, y, s, t=0.0, alpha=255, rot=0.0):
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s); c.rotate(rot)
+    for dx, dy in ((-40, 20), (40, 20), (0, -40)):
+        c.drawRoundRect(skia.Rect(dx - 40, dy - 38, dx + 40, dy + 42), 10, 10, P(color=col('#0b1a3a', int(a * 0.18)), blur=5))
+        c.drawRoundRect(skia.Rect(dx - 40, dy - 40, dx + 40, dy + 40), 10, 10, lin(c, (0, dy - 40, 0, dy + 40), [col('#ffffff', a), col('#e9eef5', a)]))
+        c.drawRoundRect(skia.Rect(dx - 40, dy - 40, dx + 40, dy + 40), 10, 10, P(color=col('#b9c4d3', a), stroke=4))
+        for k in range(5):
+            rr = random.Random(k + dx * 7 + dy)
+            c.drawCircle(dx + rr.uniform(-28, 28), dy + rr.uniform(-28, 28), 3, P(color=col('#d3dbe6', a)))
+    c.restore()
+
+def soil(c, y, t=0.0, x0=0, x1=W, y1=H, seed=4):
+    """Brown soil cross-section with pebbles from y down."""
+    c.drawRect(skia.Rect(x0, y, x1, y1), lin(c, (0, y, 0, y1), [col('#8a5a35'), col('#5e3a20')]))
+    c.drawRect(skia.Rect(x0, y - 6, x1, y + 14), P(color=col('#6b4423')))
+    rnd = random.Random(seed)
+    for i in range(int((x1 - x0) * (y1 - y) / 9000)):
+        px, py = rnd.uniform(x0, x1), rnd.uniform(y + 30, y1); r = rnd.uniform(5, 16)
+        c.drawOval(skia.Rect(px - r * 1.3, py - r, px + r * 1.3, py + r), P(color=col(rnd.choice(['#a5774f', '#734a2b', '#9a6a44']))))
+
+def root_paths(x, y, s=1.0, seed=2):
+    rnd = random.Random(seed); out = []
+    for i in range(7):
+        ang = math.radians(-60 + i * 20 + rnd.uniform(-6, 6)); L = s * rnd.uniform(180, 300)
+        p = skia.Path(); p.moveTo(x, y)
+        mx, my = x + math.sin(ang) * L * 0.5 + rnd.uniform(-20, 20) * s, y + math.cos(ang) * L * 0.5
+        ex, ey = x + math.sin(ang) * L, y + math.cos(ang) * L
+        p.quadTo(mx, my, ex, ey); out.append((p, (x, y), (mx, my), (ex, ey)))
+    return out
+
+def plant(c, x, y, s, t, seed=1, roots=True, root_k=1.0, leaves=6, pot=False, glow=0.0):
+    """Young plant: stem from (x,y) up, leaves alternating, optional roots below y. glow = yellow sugar glow in leaves."""
+    c.save()
+    if roots and root_k > 0:
+        for (p, a, m, e) in root_paths(x, y, s, seed):
+            meas = skia.PathMeasure(p, False); L = meas.getLength(); seg = skia.Path()
+            meas.getSegment(0, L * root_k, seg, True)
+            c.drawPath(seg, P(color=col('#f3e2c0'), stroke=10 * s)); c.drawPath(seg, P(color=col('#c9a877'), stroke=3 * s))
+    h = 520 * s; sw = math.sin(t * 1.3 + seed) * 10 * s
+    stem = skia.Path(); stem.moveTo(x, y); stem.quadTo(x + sw * 0.3, y - h * 0.5, x + sw, y - h)
+    c.drawPath(stem, P(color=col('#2f7d24'), stroke=26 * s)); c.drawPath(stem, P(color=col('#5fc94a'), stroke=16 * s))
+    for i in range(leaves):
+        k = (i + 1) / (leaves + 1); side = -1 if i % 2 == 0 else 1
+        lx, ly = x + sw * k * k, y - h * k
+        leaf(c, lx + side * 70 * s * (1.1 - k * 0.3), ly - 20 * s, s * (1.05 - k * 0.35), t, colr='#5cc94a', seed=i + seed,
+             face_on=False, rot=side * 62 + math.sin(t * 1.5 + i) * 4)
+        if glow > 0:
+            gx, gy = lx + side * 70 * s, ly - 30 * s
+            c.drawCircle(gx, gy, 70 * s, rad(gx, gy, 70 * s, [col('#ffe14d', int(120 * glow)), col('#ffe14d', 0)]))
+    leaf(c, x + sw, y - h - 30 * s, s * 0.6, t, colr='#7ed957', seed=seed + 9, face_on=False, rot=math.sin(t) * 6)
+    if pot:
+        pp = skia.Path(); pp.moveTo(x - 170 * s, y - 20 * s); pp.lineTo(x + 170 * s, y - 20 * s); pp.lineTo(x + 130 * s, y + 230 * s); pp.lineTo(x - 130 * s, y + 230 * s); pp.close()
+        c.drawPath(pp, lin(c, (x - 170 * s, 0, x + 170 * s, 0), [col('#e07a4a'), col('#c25a2c')], vertical=False))
+        c.drawRoundRect(skia.Rect(x - 190 * s, y - 60 * s, x + 190 * s, y), 14 * s, 14 * s, lin(c, (0, y - 60 * s, 0, y), [col('#f08d5c'), col('#cf6334')]))
+        c.drawOval(skia.Rect(x - 165 * s, y - 64 * s, x + 165 * s, y - 34 * s), P(color=col('#6b4423')))
+    c.restore()
+
+def stoma(c, x, y, s, open_k, t=0.0, alpha=255):
+    """Leaf pore: two bean-shaped guard cells; open_k 0..1 opens the gap."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    gap = 8 + 30 * open_k
+    c.drawOval(skia.Rect(-gap * 0.9, -95, gap * 0.9, 95), P(color=col('#1f4d1a', a)))
+    for sx in (-1, 1):
+        p = skia.Path(); p.addOval(skia.Rect(-60, -110, 60, 110))
+        c.save(); c.translate(sx * (gap + 52), 0)
+        c.drawPath(p, rad(-15 * sx, -30, 140, [col('#c8f5a8', a), col('#7ed957', a), col('#4fa83a', a)], [0, 0.5, 1]))
+        c.drawPath(p, P(color=col('#2f7d24', a), stroke=6))
+        for k in range(4):
+            c.drawOval(skia.Rect(-14 + sx * 10, -70 + k * 38, 14 + sx * 10, -50 + k * 38), P(color=col('#3f9a2e', int(a * 0.8))))
+        c.restore()
+    c.restore()
+
+def onion(c, x, y, s, t, rot=0.0, alpha=255, half=False, cut=0.0):
+    """Onion bulb (x,y = centre). half=True draws the cut face with rings. cut 0..1 = slices fall away on the right."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    body = skia.Path(); body.moveTo(0, -200); body.cubicTo(60, -150, 190, -110, 190, 20); body.cubicTo(190, 150, 90, 190, 0, 190)
+    body.cubicTo(-90, 190, -190, 150, -190, 20); body.cubicTo(-190, -110, -60, -150, 0, -200); body.close()
+    c.drawOval(skia.Rect(-170, 170, 170, 210), P(color=col('#0b1a3a', int(a * 0.18)), blur=10))
+    if half:
+        c.drawPath(body, rad(0, 20, 210, [col('#ffffff', a), col('#f6eefc', a), col('#e5d3f0', a)], [0, 0.6, 1]))
+        for k in range(1, 7):
+            sc_ = 1 - k * 0.13
+            c.save(); c.translate(0, 20 * (1 - sc_)); c.scale(sc_, sc_)
+            c.drawPath(body, P(color=col('#cdb2e0', a), stroke=6 / sc_)); c.restore()
+        c.drawPath(body, P(color=col('#9c5bb8', a), stroke=12))
+    else:
+        c.drawPath(body, rad(-60, -60, 300, [col('#f3c08a', a), col('#c9773a', a), col('#8f4a1f', a)], [0, 0.55, 1]))
+        for k in (-120, -60, 0, 60, 120):
+            ln = skia.Path(); ln.moveTo(0, -195); ln.cubicTo(k * 0.6, -120, k * 1.25, 60, k * 0.35, 188)
+            c.drawPath(ln, P(color=col('#8f4a1f', int(a * 0.45)), stroke=4))
+        c.drawPath(body, P(color=col('#7a3d17', a), stroke=7))
+        tip = skia.Path(); tip.moveTo(-14, -190); tip.quadTo(0, -250, 22, -270); tip.quadTo(10, -230, 14, -190); tip.close()
+        c.drawPath(tip, P(color=col('#b9773f', a)))
+        for k in range(-3, 4):
+            c.drawLine(k * 12, 188, k * 22, 214, P(color=col('#d8c3a0', a), stroke=4))
+    c.restore()
+
+def knife(c, x, y, s=1.0, rot=0.0, alpha=255):
+    """Kitchen knife, (x,y) = middle of the blade edge; blade points right."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    bl = skia.Path(); bl.moveTo(-160, 0); bl.lineTo(230, 0); bl.quadTo(200, -70, 120, -90); bl.lineTo(-160, -90); bl.close()
+    c.drawPath(bl, lin(c, (0, -90, 0, 0), [col('#f4f7fb', a), col('#c3ccd8', a)]))
+    c.drawLine(-160, -2, 225, -2, P(color=col('#ffffff', a), stroke=4))
+    c.drawPath(bl, P(color=col('#8793a6', a), stroke=4))
+    c.drawRoundRect(skia.Rect(-400, -78, -150, -12), 26, 26, lin(c, (0, -78, 0, -12), [col('#3a4458', a), col('#1f2533', a)]))
+    for k in (-340, -270, -200): c.drawCircle(k, -45, 7, P(color=col('#c3ccd8', a)))
+    c.restore()
+
+def cutting_board(c, x, y, w_=760, h_=70):
+    c.drawRoundRect(skia.Rect(x - w_ / 2, y + 8, x + w_ / 2, y + h_ + 14), 24, 24, P(color=col('#0b1a3a', 50), blur=10))
+    c.drawRoundRect(skia.Rect(x - w_ / 2, y, x + w_ / 2, y + h_), 24, 24, lin(c, (0, y, 0, y + h_), [col('#e8b77c'), col('#c48a4c')]))
+    for k in range(4): c.drawLine(x - w_ / 2 + 40, y + 16 + k * 14, x + w_ / 2 - 40, y + 18 + k * 13, P(color=col('#b07a40', 90), stroke=3))
+
+def gas_wisp(c, x, y, s, t, seed=0, alpha=180, colr='#c9f27a'):
+    """Soft rising wisp (irritant gas / vapour), centre x,y."""
+    a = int(alpha); rnd = random.Random(seed)
+    for k in range(4):
+        dx = math.sin(t * 2 + seed + k) * 14 * s + rnd.uniform(-20, 20) * s; dy = -k * 34 * s
+        r = (40 - k * 6) * s
+        c.drawCircle(x + dx, y + dy, r, rad(x + dx, y + dy, r, [col(colr, a), col(colr, 0)]))
+
+def human_eye(c, x, y, s, t, alpha=255, iris='#5b8fd6', tear=0.0, squint=0.0):
+    """Plain almond eye (no cartoon features). tear 0..1 = tear wells up and runs down. squint narrows it."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    blink = 1.0 if (t % 3.3) > 0.14 else 0.15
+    o = blink * (1 - 0.45 * squint)
+    ep = skia.Path(); ep.moveTo(-130, 0); ep.quadTo(0, -105 * o, 130, 0); ep.quadTo(0, 95 * o, -130, 0); ep.close()
+    c.drawPath(ep, P(color=col('#ffffff', a)))
+    if tear > 0:
+        c.drawPath(ep, P(color=col('#ff9aa8', int(a * 0.35 * tear))))
+    c.save(); c.clipPath(ep, doAntiAlias=True)
+    c.drawCircle(0, 0, 56, rad(0, 0, 56, [col(mix_hx(iris, '#ffffff', 0.4), a), col(iris, a), col(mix_hx(iris, '#000000', 0.4), a)], [0, 0.6, 1]))
+    c.drawCircle(0, 0, 24, P(color=col('#0b1a3a', a)))
+    c.drawCircle(-16, -18, 11, P(color=col('#ffffff', a)))
+    c.restore()
+    c.drawPath(ep, P(color=col('#1b2a4a', a), stroke=9))
+    lash = skia.Path(); lash.moveTo(-138, -4); lash.quadTo(0, -118 * o, 138, -4)
+    c.drawPath(lash, P(color=col('#1b2a4a', a), stroke=14))
+    if tear > 0:
+        ty = 40 + 200 * clamp(tear * 1.4 - 0.4)
+        tr = 16 + 6 * clamp(tear * 2)
+        dp = skia.Path(); dp.moveTo(60, ty - tr * 2.2); dp.cubicTo(60 + tr * 1.1, ty - tr * 0.6, 60 + tr, ty + tr, 60, ty + tr); dp.cubicTo(60 - tr, ty + tr, 60 - tr * 1.1, ty - tr * 0.6, 60, ty - tr * 2.2); dp.close()
+        c.drawPath(dp, rad(55, ty, tr * 1.5, [col('#ffffff', a), col('#8fd3ff', a), col('#3fa9ff', a)], [0, 0.4, 1]))
+        c.drawPath(dp, P(color=col('#2a86e0', a), stroke=3))
+    c.restore()
+
+def skin_section(c, y, t, x0=0, x1=W, y1=1600, bump=0.0, hairs=(200, 540, 880), hair_up=0.0, muscle=True, muscle_k=0.0, show_muscle=1.0):
+    """Cross-section of skin: surface at y, hairs in follicles. hair_up 0..1 raises hairs, bump raises the skin around them.
+    muscle_k 0..1 = arrector pili contraction (glows coral)."""
+    surf = skia.Path(); surf.moveTo(x0, y)
+    step = 6
+    for xx in range(int(x0), int(x1) + step, step):
+        b = 0
+        for hx in hairs: b += bump * 46 * math.exp(-((xx - hx) / 70) ** 2)
+        surf.lineTo(xx, y - b)
+    surf.lineTo(x1, y1); surf.lineTo(x0, y1); surf.close()
+    c.drawPath(surf, lin(c, (0, y - 50, 0, y1), [col('#ffd9c2'), col('#f6b99b'), col('#e89a85')], ))
+    c.save(); c.clipPath(surf, doAntiAlias=True)
+    c.drawRect(skia.Rect(x0, y + 120, x1, y1), lin(c, (0, y + 120, 0, y1), [col('#f2b39a', 0), col('#e6917f', 160)]))
+    c.drawRect(skia.Rect(x0, y + 420, x1, y1), lin(c, (0, y + 420, 0, y1), [col('#fff2c9', 0), col('#ffe9a8', 200)]))
+    c.restore()
+    c.drawPath(surf, P(color=col('#d98572'), stroke=6))
+    for hx in hairs:
+        b = bump * 46
+        fy = y + 260
+        # follicle (tilted)
+        c.save(); c.translate(hx, fy)
+        tilt = lerp(-38, -6, hair_up)
+        c.rotate(tilt)
+        c.drawRoundRect(skia.Rect(-26, -270, 26, 30), 26, 26, P(color=col('#f0a58c')))
+        c.drawRoundRect(skia.Rect(-26, -270, 26, 30), 26, 26, P(color=col('#c9705c'), stroke=4))
+        c.drawCircle(0, 10, 30, rad(0, 10, 30, [col('#d8735e'), col('#b85540')]))
+        c.drawLine(0, 10, 0, -270 - b, P(color=col('#4a3426'), stroke=11))
+        hp = skia.Path(); hp.moveTo(0, -270 - b); hp.quadTo(-10, -420 - b, -6 + hair_up * 6, -520 - b)
+        c.drawPath(hp, P(color=col('#4a3426'), stroke=10))
+        c.restore()
+        if muscle and show_muscle > 0:
+            # arrector pili: from follicle side (lower) to just under the surface, on the side the hair leans away from
+            r = math.radians(tilt)
+            lx_, ly_ = 24, -110
+            mx0, my0 = hx + lx_ * math.cos(r) - ly_ * math.sin(r), fy + lx_ * math.sin(r) + ly_ * math.cos(r)
+            mx1, my1 = hx + lerp(120, 90, muscle_k), y + 60 - b * 0.4
+            mc = mix_hx('#e56b6b', '#ff2d55', muscle_k)
+            w_ = lerp(16, 26, muscle_k)
+            if muscle_k > 0.05:
+                c.drawLine(mx0, my0, mx1, my1, P(color=col('#ff5c85', int(110 * muscle_k * show_muscle)), stroke=w_ * 2.4, blur=8))
+            c.drawLine(mx0, my0, mx1, my1, P(color=col(mc, int(255 * show_muscle)), stroke=w_))
+            for k in range(1, 4):
+                u = k / 4
+                c.drawLine(lerp(mx0, mx1, u) - 8, lerp(my0, my1, u) - 4, lerp(mx0, mx1, u) + 8, lerp(my0, my1, u) + 4, P(color=col('#ffffff', int(90 * show_muscle)), stroke=3))
