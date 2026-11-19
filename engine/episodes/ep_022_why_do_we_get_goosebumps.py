@@ -149,11 +149,11 @@ def s5(c, t, D, cues):
     hills(c, 1500, t=t, trees=False, flowers=False)
     if t < t1 - 0.1:
         p = ease_back(prog(t, t0 + 0.8, 0.8), 1.2)
-        critter(c, 500, 1180, 1.0, t, p)
+        critter(c, 500, 1330, 1.0, t, p)
         label_pill(c, 'looks BIGGER', 540, 760, size=50, k=ease_back(prog(t, t0 + 1.4, 0.4)), fill=NAVY, hi='#ff5c85')
     else:
         p = ease_back(prog(t, t1 + 0.6, 0.6), 1.3)
-        critter(c, 500, 1180, 0.95, t, p, quills=True)
+        critter(c, 500, 1335, 0.95, t, p, quills=True)
         label_pill(c, 'QUILLS = hairs', 540, 760, size=50, k=ease_back(prog(t, t1 + 0.2, 0.4)), fill=NAVY, hi='#c98a4a')
 
 def s5_sfx(D, cues): return [(cues[0]['start'] + 0.8, 'whoosh'), (cues[0]['start'] + 1.4, 'pop'), (cues[1]['start'], 'whoosh'), (cues[1]['start'] + 0.6, 'sparkle')]
@@ -165,7 +165,7 @@ def s6(c, t, D, cues):
     m = ease_in_out(prog(t, t0 + 0.6, 1.6))      # fur -> human skin
     if m < 1:
         c.saveLayerAlpha(None, int(255 * (1 - m)))
-        fur_slab(c, t, 1200, 0.2, x0=80, x1=1000)
+        fur_slab(c, t, 1200, 0.2, x0=-60, x1=1140, n=56)
         c.restore()
     if m > 0:
         b = ease_back(prog(t, t1 + 0.2, 0.6)) if t > t1 else 0
