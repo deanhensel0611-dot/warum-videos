@@ -25,9 +25,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How do plants eat? → ep_020_how_do_plants_eat
 - [x] Why do onions make you cry? → ep_021_why_do_onions_make_you_cry
 - [x] Why do we get goosebumps? → ep_022_why_do_we_get_goosebumps
-- [ ] What makes the wind blow?
-- [ ] How do magnets work?
-- [ ] How does your heart work?
+- [x] What makes the wind blow? → ep_023_what_makes_the_wind_blow
+- [x] How do magnets work? → ep_024_how_do_magnets_work
+- [x] How does your heart work? → ep_025_how_does_your_heart_work
 - [ ] How do echoes work?
 - [ ] How do chameleons change color?
 - [ ] How do spiders make webs?

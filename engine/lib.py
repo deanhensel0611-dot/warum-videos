@@ -1812,3 +1812,255 @@ def skin_section(c, y, t, x0=0, x1=W, y1=1600, bump=0.0, hairs=(200, 540, 880), 
             for k in range(1, 4):
                 u = k / 4
                 c.drawLine(lerp(mx0, mx1, u) - 8, lerp(my0, my1, u) - 4, lerp(mx0, mx1, u) + 8, lerp(my0, my1, u) + 4, P(color=col('#ffffff', int(90 * show_muscle)), stroke=3))
+
+# ---------------- Wind, magnets, heart (added for ep_023+) ----------------
+def flag(c, x, y, s=1.0, t=0.0, wind=1.0, colr='#ff5c85', pole_h=520, alpha=255):
+    """Flag on a pole standing at (x, y) (ground). wind 0 = hanging limp, 1 = flying straight out to the right, flapping."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    c.drawOval(skia.Rect(-40, -10, 40, 10), P(color=col('#0b1a3a', int(a * 0.18)), blur=6))
+    c.drawRoundRect(skia.Rect(-9, -pole_h, 9, 0), 9, 9, lin(c, (0, -pole_h, 0, 0), [col('#e9eef6', a), col('#9aa7bd', a)]))
+    c.drawCircle(0, -pole_h - 6, 14, P(color=col('#ffd23f', a)))
+    L, Hh, n = 300, 190, 24
+    droop = math.radians(lerp(72, 3, clamp(wind)))      # 0 = flying straight out, larger = fly end hangs down
+    top, bot = [], []
+    for i in range(n + 1):
+        u = i / n
+        wave = math.sin(u * 7.0 - t * 9.0 * (0.4 + wind)) * 22 * u * (0.25 + wind)
+        px = u * L * math.cos(droop); py = -pole_h + 4 + u * L * math.sin(droop) + wave
+        top.append((px, py)); bot.append((px, py + Hh * (1 - 0.12 * u)))
+    p = skia.Path(); p.moveTo(*top[0])
+    for q in top[1:]: p.lineTo(*q)
+    for q in reversed(bot): p.lineTo(*q)
+    p.close()
+    c.drawPath(p, lin(c, (0, -pole_h, L, 0), [col(colr, a), col(mix_hx(colr, '#1b2a4a', 0.25), a)], vertical=False))
+    for i in range(1, n, 3):   # cloth folds
+        sh = math.sin(i / n * 7.0 - t * 9.0 * (0.4 + wind))
+        if sh > 0.3:
+            c.drawLine(top[i][0], top[i][1] + 6, bot[i][0], bot[i][1] - 6, P(color=col('#ffffff', int(a * 0.22 * sh)), stroke=10))
+    c.drawPath(p, P(color=col(mix_hx(colr, '#1b2a4a', 0.4), a), stroke=3))
+    c.restore()
+
+def wind_lines(c, t, y0=700, y1=1500, n=8, speed=900, seed=7, alpha=200, colr='#ffffff', direction=1, curl=True, x0=-200, x1=W + 200):
+    """Flowing streamlines with a curl at the end; direction 1 = left->right, -1 = right->left."""
+    rnd = random.Random(seed)
+    for i in range(n):
+        y = rnd.uniform(y0, y1); L = rnd.uniform(160, 300); sp = speed * rnd.uniform(0.8, 1.2)
+        span = (x1 - x0) + L
+        u = (t * sp + rnd.uniform(0, span)) % span
+        hx = x0 + u if direction > 0 else x1 - u
+        tx = hx - L * direction
+        fade = min(1.0, u / 200, (span - u) / 200)
+        a = int(alpha * max(0, fade))
+        if a <= 0: continue
+        p = skia.Path(); p.moveTo(tx, y)
+        p.cubicTo(tx + L * 0.35 * direction, y - 14, hx - L * 0.35 * direction, y + 14, hx, y)
+        if curl:
+            r = 26; p.cubicTo(hx + r * 1.4 * direction, y, hx + r * 1.4 * direction, y - r * 1.6, hx + r * 0.4 * direction, y - r * 1.5)
+        c.drawPath(p, P(color=col(colr, a), stroke=9))
+
+def thermometer(c, x, y, s=1.0, level=0.5, hot='#ff5c85', alpha=255):
+    """Upright thermometer, bulb at (x, y); level 0..1 fills the tube."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(-30, -330, 30, 0), 30, 30, P(color=col('#ffffff', a)))
+    c.drawCircle(0, 0, 52, P(color=col('#ffffff', a)))
+    c.drawRoundRect(skia.Rect(-30, -330, 30, 0), 30, 30, P(color=col('#1b2a4a', a), stroke=6))
+    c.drawCircle(0, 0, 52, P(color=col('#1b2a4a', a), stroke=6))
+    c.drawCircle(0, 0, 49, P(color=col('#ffffff', a)))
+    fill_top = lerp(-40, -300, clamp(level))
+    c.drawRoundRect(skia.Rect(-15, fill_top, 15, 0), 15, 15, P(color=col(hot, a)))
+    c.drawCircle(0, 0, 36, P(color=col(hot, a)))
+    for i in range(5):
+        yy = -80 - i * 50; c.drawLine(14, yy, 26, yy, P(color=col('#1b2a4a', int(a * 0.6)), stroke=4))
+    c.drawCircle(-12, -12, 10, P(color=col('#ffffff', int(a * 0.6))))
+    c.restore()
+
+def air_dots(c, x0, y0, x1, y1, t, n=30, spread=1.0, seed=3, colr='#ffffff', r=11, alpha=230, jiggle=1.0):
+    """Gas particles jiggling in a box; spread < 1 packs them towards the box centre (denser air)."""
+    rnd = random.Random(seed); cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    for i in range(n):
+        bx, by = rnd.uniform(x0, x1), rnd.uniform(y0, y1)
+        f1, f2, ph = rnd.uniform(1.5, 3.0), rnd.uniform(1.5, 3.0), rnd.uniform(0, 6.3)
+        px = cx + (bx - cx) * spread + math.sin(t * f1 * (0.6 + jiggle) + ph) * 18 * jiggle
+        py = cy + (by - cy) * spread + math.cos(t * f2 * (0.6 + jiggle) + ph) * 18 * jiggle
+        c.drawCircle(px, py, r * 1.9, rad(px, py, r * 1.9, [col(colr, int(alpha * 0.35)), col(colr, 0)]))
+        c.drawCircle(px, py, r, P(color=col(colr, alpha)))
+
+MAG_N, MAG_S = '#ff5c85', '#2f9bff'
+def bar_magnet(c, x, y, s=1.0, rot=0.0, alpha=255, w_=380, h_=120, labels=True):
+    """Bar magnet centred at (x, y); north (coral, 'N') on the left at rot=0, south (blue, 'S') on the right."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    r = skia.Rect(-w_ / 2, -h_ / 2, w_ / 2, h_ / 2)
+    c.drawRoundRect(skia.Rect(-w_ / 2 + 6, -h_ / 2 + 14, w_ / 2 + 6, h_ / 2 + 14), 22, 22, P(color=col('#0b1a3a', int(a * 0.22)), blur=10))
+    c.save(); c.clipRRect(skia.RRect.MakeRectXY(r, 22, 22), doAntiAlias=True)
+    c.drawRect(skia.Rect(-w_ / 2, -h_ / 2, 0, h_ / 2), lin(c, (0, -h_ / 2, 0, h_ / 2), [col('#ff8aa6', a), col(MAG_N, a), col('#d63e66', a)], pos=[0, 0.4, 1]))
+    c.drawRect(skia.Rect(0, -h_ / 2, w_ / 2, h_ / 2), lin(c, (0, -h_ / 2, 0, h_ / 2), [col('#7cc6ff', a), col(MAG_S, a), col('#1f6fc4', a)], pos=[0, 0.4, 1]))
+    c.drawRect(skia.Rect(-w_ / 2, -h_ / 2, w_ / 2, -h_ / 2 + 14), P(color=col('#ffffff', int(a * 0.28))))
+    c.restore()
+    c.drawRoundRect(r, 22, 22, P(color=col('#1b2a4a', a), stroke=5))
+    if labels:
+        for sx, L in ((-1, 'N'), (1, 'S')):
+            c.save(); c.translate(sx * w_ / 4, 0); c.rotate(-rot)
+            text_block(c, L, 0, 0, size=int(h_ * 0.62), fill='#ffffff', stroke='#1b2a4a', alpha=a)
+            c.restore()
+    c.restore()
+
+def paperclip(c, x, y, s=1.0, rot=0.0, alpha=255, colr='#c3ccd9'):
+    """Steel paperclip, long axis vertical at rot=0, centred at (x, y), ~150 px long."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    p = skia.Path()
+    p.moveTo(-12, 40); p.lineTo(-12, -50); p.arcTo(skia.Rect(-12, -68, 12, -32), 180, 180, False)
+    p.lineTo(12, 55); p.arcTo(skia.Rect(-24, 37, 24, 85), 0, 180, False)
+    p.lineTo(-24, -60); p.arcTo(skia.Rect(-24, -84, 24, -36), 180, 180, False); p.lineTo(24, 20)
+    c.drawPath(p, P(color=col('#0b1a3a', int(a * 0.25)), stroke=11, blur=3))
+    c.drawPath(p, P(color=col('#6b778a', a), stroke=10))
+    c.drawPath(p, P(color=col(colr, a), stroke=6))
+    c.restore()
+
+def compass(c, x, y, r, needle_ang, t=0.0, alpha=255):
+    """Compass rose; needle_ang in degrees (0 = needle's red north end points up)."""
+    a = int(alpha)
+    c.drawCircle(x, y + r * 0.08, r * 1.04, P(color=col('#0b1a3a', int(a * 0.25)), blur=10))
+    c.drawCircle(x, y, r, lin(c, (0, y - r, 0, y + r), [col('#ffe58a', a), col('#e0a92a', a)]))
+    c.drawCircle(x, y, r * 0.86, P(color=col('#ffffff', a)))
+    c.drawCircle(x, y, r * 0.86, P(color=col('#1b2a4a', int(a * 0.5)), stroke=4))
+    for i in range(16):
+        ang = math.radians(i * 22.5); L = r * (0.12 if i % 4 == 0 else 0.06)
+        c.drawLine(x + math.sin(ang) * r * 0.84, y - math.cos(ang) * r * 0.84, x + math.sin(ang) * (r * 0.84 - L), y - math.cos(ang) * (r * 0.84 - L), P(color=col('#1b2a4a', int(a * 0.6)), stroke=4))
+    c.save(); c.translate(x, y); c.rotate(needle_ang)
+    n = skia.Path(); n.moveTo(0, -r * 0.72); n.lineTo(r * 0.11, 0); n.lineTo(-r * 0.11, 0); n.close()
+    sth = skia.Path(); sth.moveTo(0, r * 0.72); sth.lineTo(r * 0.11, 0); sth.lineTo(-r * 0.11, 0); sth.close()
+    c.drawPath(n, P(color=col(MAG_N, a))); c.drawPath(sth, P(color=col('#9aa7bd', a)))
+    c.drawCircle(0, 0, r * 0.07, P(color=col('#1b2a4a', a)))
+    c.restore()
+    text_block(c, 'N', x, y - r * 0.6, size=int(r * 0.26), fill='#1b2a4a', stroke='#ffffff', alpha=a)
+
+def field_lines(c, x, y, s=1.0, k=1.0, alpha=200, colr='#ffffff', t=0.0, n=5, rot=0.0):
+    """Dipole field lines around a horizontal magnet centred at (x, y) (N left). k 0..1 draws them on; dots flow N->S."""
+    if k <= 0: return
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    for i in range(1, n + 1):
+        hgt = 70 + i * 70; half = 190
+        for sy in (-1, 1):
+            p = skia.Path(); p.moveTo(-half + 20, 0)
+            p.cubicTo(-half - i * 60, sy * hgt * 1.25, half + i * 60, sy * hgt * 1.25, half - 20, 0)
+            meas = skia.PathMeasure(p, False); L = meas.getLength()
+            seg = skia.Path(); meas.getSegment(0, L * k, seg, True)
+            c.drawPath(seg, P(color=col(colr, int(alpha * (1 - i * 0.1))), stroke=6))
+            if k >= 1:
+                u = ((t * 0.25 + i * 0.17) % 1.0)
+                pos, _ = meas.getPosTan(L * u)
+                c.drawCircle(pos.x(), pos.y(), 9, P(color=col('#ffd23f', int(alpha))))
+    c.restore()
+
+def spin_electron(c, x, y, r, t, up=True, alpha=255, seed=0):
+    """Electron as a small glowing ball spinning, with a magnet arrow (up or down)."""
+    a = int(alpha)
+    c.drawCircle(x, y, r * 2.0, rad(x, y, r * 2.0, [col('#7cc6ff', int(a * 0.45)), col('#7cc6ff', 0)]))
+    c.drawCircle(x, y, r, rad(x - r * 0.3, y - r * 0.35, r * 1.4, [col('#ffffff', a), col('#5fb4ff', a), col('#1f6fc4', a)], [0, 0.4, 1]))
+    sw = (t * 360 * 0.8 + seed * 50) % 360
+    pth = skia.Path(); pth.addArc(skia.Rect(x - r * 1.45, y - r * 0.5, x + r * 1.45, y + r * 0.5), sw, 250)
+    c.drawPath(pth, P(color=col('#ffffff', int(a * 0.8)), stroke=r * 0.12))
+    d = -1 if up else 1
+    arrow(c, x, y - d * r * 0.2 * -1, x, y + d * r * 2.0, colr='#ffd23f', w=r * 0.22, alpha=a)
+
+def domains(c, x0, y0, w_, h_, align, t=0.0, seed=4, cols_=4, rows=3, alpha=255, arrows_per=4, tint=True, target=0.0):
+    """Iron block split into magnetic domains; each patch holds arrows. align 0 = random directions, 1 = all point to `target` degrees."""
+    rnd = random.Random(seed); a = int(alpha)
+    c.save(); r = skia.Rect(x0, y0, x0 + w_, y0 + h_)
+    c.drawRoundRect(skia.Rect(x0 + 6, y0 + 16, x0 + w_ + 6, y0 + h_ + 16), 26, 26, P(color=col('#0b1a3a', int(a * 0.2)), blur=12))
+    c.drawRoundRect(r, 26, 26, lin(c, (0, y0, 0, y0 + h_), [col('#dfe5ee', a), col('#aeb8c7', a)]))
+    c.clipRRect(skia.RRect.MakeRectXY(r, 26, 26), doAntiAlias=True)
+    cw, ch = w_ / cols_, h_ / rows
+    # jittered grid corners -> irregular patches
+    pts = [[(x0 + i * cw + (rnd.uniform(-0.22, 0.22) * cw if 0 < i < cols_ else 0), y0 + j * ch + (rnd.uniform(-0.22, 0.22) * ch if 0 < j < rows else 0)) for j in range(rows + 1)] for i in range(cols_ + 1)]
+    tints = ['#ffd9e2', '#d6ecff', '#fff3c4', '#e3f7dc', '#efe1ff']
+    for i in range(cols_):
+        for j in range(rows):
+            q = [pts[i][j], pts[i + 1][j], pts[i + 1][j + 1], pts[i][j + 1]]
+            p = skia.Path(); p.moveTo(*q[0]); [p.lineTo(*v) for v in q[1:]]; p.close()
+            base = rnd.uniform(0, 360)
+            ang = base + ((target - base + 180) % 360 - 180) * clamp(align)
+            if tint: c.drawPath(p, P(color=col(tints[(i * 3 + j) % len(tints)], int(a * 0.55 * (1 - align) + a * 0.15))))
+            c.drawPath(p, P(color=col('#7d8798', int(a * 0.6 * (1 - align * 0.7))), stroke=4))
+            mx, my = sum(v[0] for v in q) / 4, sum(v[1] for v in q) / 4
+            for k in range(arrows_per):
+                ox = (k % 2 - 0.5) * cw * 0.42; oy = (k // 2 - 0.5) * ch * 0.42
+                wob = math.sin(t * 3 + i + j * 2 + k) * 4 * (1 - align)
+                L = min(cw, ch) * 0.17; rr = math.radians(ang + wob)
+                ax, ay = mx + ox, my + oy
+                arrow(c, ax - math.cos(rr) * L, ay - math.sin(rr) * L, ax + math.cos(rr) * L, ay + math.sin(rr) * L, colr=MAG_N if align < 0.98 else '#e8264f', w=7, alpha=a)
+    c.restore()
+    c.drawRoundRect(r, 26, 26, P(color=col('#5b6476', a), stroke=5))
+
+# --- heart (plain infographic style, no face) ---
+HEART_O2, HEART_LOW = '#ff4f6e', '#6f8fe8'   # oxygen-rich / oxygen-poor blood (diagram convention)
+def _heart_outline():
+    p = skia.Path()
+    p.moveTo(20, 330)
+    p.cubicTo(-120, 260, -300, 130, -300, -40)
+    p.cubicTo(-300, -200, -190, -275, -80, -250)
+    p.cubicTo(-30, -240, 0, -215, 10, -200)
+    p.cubicTo(30, -230, 90, -270, 170, -255)
+    p.cubicTo(280, -235, 320, -120, 300, 0)
+    p.cubicTo(280, 140, 150, 270, 20, 330)
+    p.close(); return p
+
+def heart(c, x, y, s=1.0, t=0.0, squeeze=0.0, chambers=0.0, valves=0.0, glow=0.0, alpha=255, flow=0.0, spark=-1.0, vessels=True, hi=None):
+    """Infographic heart (front view, as if facing the viewer: the heart's RIGHT side is on the viewer's LEFT).
+    squeeze 0..1 contracts it; chambers 0..1 fades in a cut-away of the four chambers; valves 0..1 = open..closed
+    (both AV valves); spark = 0..1 position of the electrical wave (top -> bottom), <0 hides it; hi = list of
+    chamber names to highlight: 'RA','LA','RV','LV'."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.scale(s, s)
+    sq = 1 - 0.07 * squeeze
+    if glow > 0:
+        c.drawCircle(0, 30, 470, rad(0, 30, 470, [col('#ff5c85', int(110 * glow * a / 255)), col('#ff5c85', 0)]))
+    if vessels:
+        # vena cava into the right atrium (viewer left), pulmonary artery (blue) and aorta arch (red) on top
+        c.drawLine(-190, -200, -190, -420, P(color=col('#3d5bb8', a), stroke=78))
+        c.drawLine(-190, -200, -190, -420, P(color=col(HEART_LOW, a), stroke=62))
+        pa = skia.Path(); pa.moveTo(-50, -150); pa.cubicTo(-50, -270, 60, -300, 190, -285)
+        c.drawPath(pa, P(color=col('#3d5bb8', a), stroke=76)); c.drawPath(pa, P(color=col(HEART_LOW, a), stroke=60))
+        ao = skia.Path(); ao.moveTo(20, -170); ao.cubicTo(0, -450, 230, -460, 250, -320)
+        c.drawPath(ao, P(color=col('#b51d3c', a), stroke=88)); c.drawPath(ao, P(color=col(HEART_O2, a), stroke=72))
+        c.drawPath(ao, P(color=col('#ffffff', int(a * 0.25)), stroke=16))
+    c.scale(sq, sq)
+    o = _heart_outline()
+    c.drawPath(o, P(color=col('#0b1a3a', int(a * 0.25)), blur=16))
+    c.drawPath(o, rad(-90, -120, 520, [col('#ff8fa3', a), col('#f0506e', a), col('#b8213f', a)], [0, 0.5, 1]))
+    c.drawPath(o, P(color=col('#8a1530', a), stroke=6))
+    if chambers < 0.99:
+        # surface groove + highlight (closed heart)
+        g = skia.Path(); g.moveTo(10, -190); g.cubicTo(-30, -40, -20, 140, 30, 300)
+        c.drawPath(g, P(color=col('#b8213f', int(a * (1 - chambers) * 0.8)), stroke=10))
+        c.drawOval(skia.Rect(-230, -200, -110, -90), P(color=col('#ffffff', int(a * 0.35 * (1 - chambers))), blur=14))
+    if chambers > 0:
+        ca = int(a * chambers)
+        hs = set(hi or [])
+        def ch(name, path, colr):
+            k = 1.0 if (not hs or name in hs) else 0.35
+            c.drawPath(path, P(color=col(colr, int(ca * k))))
+            c.drawPath(path, P(color=col('#7a1029', int(ca * 0.6)), stroke=4))
+            if name in hs:
+                c.drawPath(path, P(color=col('#ffffff', int(ca * (0.6 + 0.4 * math.sin(t * 6)))), stroke=8))
+        ra = skia.Path(); ra.addOval(skia.Rect(-250, -205, -50, -25))
+        la = skia.Path(); la.addOval(skia.Rect(40, -215, 250, -45))
+        cs = 1 - 0.12 * squeeze
+        rv = skia.Path(); rv.moveTo(-245, 5); rv.lineTo(-30, 5); rv.lineTo(-30, 255 * cs); rv.cubicTo(-120, 215 * cs, -230, 120 * cs, -245, 5); rv.close()
+        lv = skia.Path(); lv.moveTo(35, 5); lv.lineTo(250, 5); lv.cubicTo(245, 120 * cs, 160, 230 * cs, 35, 285 * cs); lv.close()
+        ch('RA', ra, HEART_LOW); ch('RV', rv, HEART_LOW); ch('LA', la, HEART_O2); ch('LV', lv, HEART_O2)
+        # septum
+        c.drawLine(2, -200, 2, 300, P(color=col('#8a1530', ca), stroke=16))
+        # AV valves: two flaps each; open = flaps hang down, closed = horizontal
+        for vx in (-140, 145):
+            for sx in (-1, 1):
+                ang = math.radians(lerp(75, 8, clamp(valves)))
+                bx, by = vx + sx * 62, -10
+                ex, ey = bx - sx * math.cos(ang) * 58, by + math.sin(ang) * 58
+                c.drawLine(bx, by, ex, ey, P(color=col('#ffffff', ca), stroke=12))
+    if spark >= 0:
+        yy = lerp(-230, 330, clamp(spark))
+        c.save(); c.clipPath(o, doAntiAlias=True)
+        c.drawRect(skia.Rect(-320, yy - 40, 320, yy + 40), lin(c, (0, yy - 40, 0, yy + 40), [col('#fff6b0', 0), col('#fff6b0', int(a * 0.85)), col('#fff6b0', 0)]))
+        c.restore()
+    c.restore()

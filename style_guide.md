@@ -36,13 +36,26 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 - Within the general-caption group, avg. watch time splits in two: caterpillar 20.0 s and leaves 19.5 s vs. thunder 8.0 s, seasons 8.7 s, ice 9.5 s, fish 10.4 s. Both strong ones are nature/biology topics with a visible transformation – could be topic, not style (n=2 → **uncertain**).
 - E1 (cold open) still has no data: ep_017–019 are not on TikTok yet and not in the YouTube data (0/3 measured).
 
+- 2026-11-20 (n=11 TikTok – no new posts since 11-19; YouTube now n=9 Shorts): YouTube retention is steady at 47–64 % avg. view % (ice 64 %, rain 56 %, seasons 53 %, bees 51 %, ocean 50 %); only thunder is low (30 %, 6 views). Views split hard: autumn leaves 1,558, bees 1,252, ocean 1,184 vs. 1–118 for the other six – the three winners were all posted 11-15/11-17 and are older, so age + algorithm pickup confound it. Kids vs. general format makes no visible difference on YouTube (bees/ocean are kids format) – the format effect seen on TikTok is probably driven by captions/hashtags, not visuals (uncertain).
+- Topic signal across both platforms: autumn leaves is top-3 on both; caterpillar (TikTok 19.5 s) and bees (YouTube 1,252 views, 5 subs) also lead → visible nature/biology transformations keep winning (n=4, **uncertain but repeating**). This is a topic effect, not a style rule – it only affects topic order, not the style guide.
+- The rainbow Short still has 1 view after 5 days → very likely a settings/visibility problem (or "made for kids" limiting it), not a style signal; Dean should check it in YouTube Studio.
+
 ## Change history
+- 2026-11-20: No style change (E1 still 0 measured videos – ep_017–022 are not in the TikTok/YouTube data yet). E1 cold open continued on ep_023–025. New lib props: flag (fixed droop geometry), wind_lines, thermometer, air_dots, bar_magnet (MAG_N/MAG_S colours), paperclip, compass, field_lines, spin_electron, domains, heart (plain infographic heart with 4-chamber cut-away, valves, electrical wave).
 - 2026-11-19: No new style change (E1 still unmeasured). E1 cold open continued on ep_020–022. New lib props: co2_molecule, sugar_cubes, soil, root_paths, plant, stoma, onion, knife, cutting_board, gas_wisp, human_eye (plain, with tears), skin_section (hair follicles + arrector pili, goosebump bumps).
 - 2026-11-18: Experiment E1 (cold open + voice at 0.1 s) started on ep_017–019. First episodes in the new general-audience look (faces=False, no kid character). New lib props: airplane, airfoil + streamlines, arrow, label_pill, water_body, tank, steel_block/bowl, ship (cargo/carrier, load-line marks), grass_field.
 - 2026-11-17: Guide created. General-audience format (no faces), word-by-word captions, 4 transition types, signature sounds ding/chime, ambience beds, −14 LUFS.
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-20** (data: 11 TikToks + 9 YouTube Shorts, last 14 days via Windsor.ai)
+- Worked: YouTube holds viewers well – 47–64 % avg. view % on 8 of 9 Shorts; leaves (1,558), bees (1,252) and ocean (1,184 views, 2–5 subs each) took off.
+- TikTok unchanged (no new posts): leaves 20.6 s / caterpillar 19.5 s avg. watch lead; general-caption posts 293–435 views vs. 68–77 for #kidslearning.
+- Pattern on both platforms: nature/biology transformations (leaves, caterpillar, bees) lead – topic effect, not style (n=4, uncertain).
+- Didn't work: thunder Short (30 %, 6 views); rainbow Short still 1 view – likely a visibility/audience setting, worth a check in YouTube Studio.
+- Change today: none – E1 (cold open) still has 0 measured videos (ep_017–022 not in the data yet); continued on ep_023–025.
+- Uncertain: pacing, transitions, sound, posting time (views confounded with video age). Tomorrow: measure E1 as soon as ep_017+ appear in the data.
 
 **2026-11-19** (data: 11 TikToks + 3 YouTube Shorts, last 14 days via Windsor.ai)
 - Worked: general captions/hashtags – 6 posts with 290–423 views and 8–20 s avg. watch vs. 68–77 views and 3–5 s for the 5 #kidslearning posts (now n≥5 each → likely real; posting date still confounded).
