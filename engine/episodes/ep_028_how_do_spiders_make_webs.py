@@ -156,7 +156,7 @@ def s5(c, t, D, cues):
         spdr(c, end[0], end[1], 0.42, t, walk=1.0, rot=(t * 70) % 360)
     if z >= 0.01:
         # spider standing on a spoke (dry)
-        spdr(c, 540 - 60, 1110 - 165, 0.36, t, rot=0)
+        spdr(c, 540, 1110 - 175, 0.36, t, rot=0)
     c.restore()
     label_pill(c, 'STICKY spiral', 540, 720, size=46, k=ease_back(prog(t, t0 + 0.8, 0.4)), fill=NAVY, hi='#e0a800')
     if t > t1:
