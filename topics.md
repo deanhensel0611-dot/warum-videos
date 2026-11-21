@@ -28,9 +28,9 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] What makes the wind blow? → ep_023_what_makes_the_wind_blow
 - [x] How do magnets work? → ep_024_how_do_magnets_work
 - [x] How does your heart work? → ep_025_how_does_your_heart_work
-- [ ] How do echoes work?
-- [ ] How do chameleons change color?
-- [ ] How do spiders make webs?
+- [x] How do echoes work? → ep_026_how_do_echoes_work
+- [x] How do chameleons change color? → ep_027_how_do_chameleons_change_color
+- [x] How do spiders make webs? → ep_028_how_do_spiders_make_webs
 - [ ] Why do we have to brush our teeth?
 - [ ] How do clouds float?
 - [ ] Why are bubbles round?

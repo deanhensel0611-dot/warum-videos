@@ -40,7 +40,11 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 - Topic signal across both platforms: autumn leaves is top-3 on both; caterpillar (TikTok 19.5 s) and bees (YouTube 1,252 views, 5 subs) also lead → visible nature/biology transformations keep winning (n=4, **uncertain but repeating**). This is a topic effect, not a style rule – it only affects topic order, not the style guide.
 - The rainbow Short still has 1 view after 5 days → very likely a settings/visibility problem (or "made for kids" limiting it), not a style signal; Dean should check it in YouTube Studio.
 
+- 2026-11-21 (n=11 TikTok – still no new posts since 11-19; YouTube n=11 Shorts, caterpillar + fish newly in the data): YouTube retention stays in the 47–56 % band (caterpillar 51.5 %, fish 53.7 % but only 10 views, caterpillar 63 views). View counts keep splitting by age/pickup: bees 1,263, leaves 1,562, ocean 1,185 vs. ≤251 for everything newer. Thunder Short now 37 % avg. view % (still lowest), rainbow still 1 view. ep_017–025 (E1 cold open) are still in neither data set → E1 0/9 measured.
+- TikTok numbers barely moved (+0–24 views per video); the account has had no new TikTok post since 11-19, so TikTok can't tell us anything about the new format or E1 until Dean posts again.
+
 ## Change history
+- 2026-11-21: No style change (E1 still 0 measured; ep_017–025 not in the data). E1 cold open continued on ep_026–028. New lib props: cliff, megaphone, stopwatch, bat (plain), ball, chameleon (plain, natural turret eye, colour via cham_color), crystal_color, branch, crystal_lattice, soap_bubble, feather, spider (plain top view), orb_web (frame, dry spokes, sticky spiral with glue drops, anchors).
 - 2026-11-20: No style change (E1 still 0 measured videos – ep_017–022 are not in the TikTok/YouTube data yet). E1 cold open continued on ep_023–025. New lib props: flag (fixed droop geometry), wind_lines, thermometer, air_dots, bar_magnet (MAG_N/MAG_S colours), paperclip, compass, field_lines, spin_electron, domains, heart (plain infographic heart with 4-chamber cut-away, valves, electrical wave).
 - 2026-11-19: No new style change (E1 still unmeasured). E1 cold open continued on ep_020–022. New lib props: co2_molecule, sugar_cubes, soil, root_paths, plant, stoma, onion, knife, cutting_board, gas_wisp, human_eye (plain, with tears), skin_section (hair follicles + arrector pili, goosebump bumps).
 - 2026-11-18: Experiment E1 (cold open + voice at 0.1 s) started on ep_017–019. First episodes in the new general-audience look (faces=False, no kid character). New lib props: airplane, airfoil + streamlines, arrow, label_pill, water_body, tank, steel_block/bowl, ship (cargo/carrier, load-line marks), grass_field.
@@ -48,6 +52,13 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-21** (data: 11 TikToks + 11 YouTube Shorts, last 14 days via Windsor.ai)
+- Worked: YouTube retention steady at 47–56 % avg. view % (caterpillar 51.5 %, fish 53.7 % newly measured); leaves 1,562 / bees 1,263 / ocean 1,185 views remain the leaders.
+- TikTok: no new posts since 11-19 – numbers almost unchanged (leaves 20.5 s, caterpillar 19.3 s avg. watch lead; general captions 293–435 views vs. 68–77 for #kidslearning).
+- Didn't work: thunder Short (37 %, 8 views); rainbow Short still 1 view after 6 days – still worth a look in YouTube Studio (visibility/audience).
+- Change today: none – E1 (cold open) has 0/9 measured videos; ep_017–025 are not in the TikTok or YouTube data yet. Continued E1 on ep_026–028.
+- Uncertain: pacing, transitions, sound, posting time (views confounded with video age). Measuring E1 needs the new episodes posted on TikTok and live on YouTube for ≥48 h.
 
 **2026-11-20** (data: 11 TikToks + 9 YouTube Shorts, last 14 days via Windsor.ai)
 - Worked: YouTube holds viewers well – 47–64 % avg. view % on 8 of 9 Shorts; leaves (1,558), bees (1,252) and ocean (1,184 views, 2–5 subs each) took off.

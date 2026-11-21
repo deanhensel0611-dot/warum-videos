@@ -2064,3 +2064,272 @@ def heart(c, x, y, s=1.0, t=0.0, squeeze=0.0, chambers=0.0, valves=0.0, glow=0.0
         c.drawRect(skia.Rect(-320, yy - 40, 320, yy + 40), lin(c, (0, yy - 40, 0, yy + 40), [col('#fff6b0', 0), col('#fff6b0', int(a * 0.85)), col('#fff6b0', 0)]))
         c.restore()
     c.restore()
+
+# ---------------- props added 2026-11-21 (echoes, chameleon, spider webs) ----------------
+def cliff(c, x, y_top, w_, h_=None, side=1, seed=3, c1='#c98a5b', c2='#9c5f3a', alpha=255):
+    """Rock cliff face. side=1: rock body on the right with its face pointing left at x; side=-1 mirrored."""
+    a = int(alpha); h_ = h_ or (H - y_top); rnd = random.Random(seed)
+    p = skia.Path(); p.moveTo(x + side * w_, y_top - 40)
+    pts = []
+    for i in range(9):
+        yy = lerp(y_top, y_top + h_, i / 8)
+        pts.append((x + side * rnd.uniform(-14, 26) * (1 if 0 < i < 8 else 0.4), yy))
+    p.lineTo(x + side * 30, y_top - 20)
+    for (px, py) in pts: p.lineTo(px, py)
+    p.lineTo(x + side * w_, y_top + h_); p.close()
+    c.drawPath(p, lin(c, (x, 0, x + side * w_, 0), [col(c1, a), col(c2, a)], vertical=False))
+    c.drawPath(p, P(color=col('#6e3f24', int(a * 0.8)), stroke=5))
+    for i in range(6):
+        yy = y_top + h_ * (0.12 + 0.15 * i)
+        xx = x + side * rnd.uniform(50, w_ * 0.7)
+        L = rnd.uniform(60, 140)
+        c.drawLine(xx, yy, xx + side * L, yy + rnd.uniform(-8, 8), P(color=col('#7a4528', int(a * 0.45)), stroke=6))
+    c.drawRect(skia.Rect(min(x, x + side * w_) - 8, y_top - 52, max(x, x + side * w_) + 8, y_top - 30), P(color=col('#6fc24a', a)))
+
+def megaphone(c, x, y, s=1.0, rot=0.0, alpha=255, colr='#ff5c85'):
+    """Plain megaphone, mouth pointing right at rot=0; (x, y) = handle end."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(-20, 10, 20, 90), 12, 12, P(color=col('#1b2a4a', a)))
+    c.drawRoundRect(skia.Rect(-60, -28, 10, 28), 14, 14, P(color=col('#ffffff', a)))
+    c.drawRoundRect(skia.Rect(-60, -28, 10, 28), 14, 14, P(color=col('#1b2a4a', a), stroke=5))
+    p = skia.Path(); p.moveTo(0, -30); p.lineTo(150, -95); p.lineTo(150, 95); p.lineTo(0, 30); p.close()
+    c.drawPath(p, lin(c, (0, -95, 0, 95), [col(mix_hx(colr, '#ffffff', 0.3), a), col(colr, a)]))
+    c.drawPath(p, P(color=col('#1b2a4a', a), stroke=5))
+    c.drawOval(skia.Rect(132, -98, 168, 98), P(color=col('#ffffff', a)))
+    c.drawOval(skia.Rect(132, -98, 168, 98), P(color=col('#1b2a4a', a), stroke=5))
+    c.restore()
+
+def stopwatch(c, x, y, r, frac, alpha=255, label=None, accent='#ff5c85'):
+    """Stopwatch; frac = hand position as fraction of a turn (also fills a sector)."""
+    a = int(alpha)
+    c.drawRoundRect(skia.Rect(x - 22, y - r - 46, x + 22, y - r - 6), 8, 8, P(color=col('#1b2a4a', a)))
+    c.drawRoundRect(skia.Rect(x - 40, y - r - 62, x + 40, y - r - 38), 12, 12, P(color=col(accent, a)))
+    c.drawCircle(x, y, r + 14, P(color=col('#1b2a4a', a)))
+    c.drawCircle(x, y, r, P(color=col('#ffffff', a)))
+    if frac > 0:
+        p = skia.Path(); p.moveTo(x, y); p.arcTo(skia.Rect(x - r * 0.9, y - r * 0.9, x + r * 0.9, y + r * 0.9), -90, 360 * min(frac, 0.9999), False); p.close()
+        c.drawPath(p, P(color=col(accent, int(a * 0.35))))
+    for i in range(12):
+        ang = math.radians(i * 30 - 90)
+        c.drawLine(x + math.cos(ang) * r * 0.8, y + math.sin(ang) * r * 0.8, x + math.cos(ang) * r * 0.92, y + math.sin(ang) * r * 0.92,
+                   P(color=col('#1b2a4a', a), stroke=6 if i % 3 == 0 else 3))
+    ang = math.radians(360 * frac - 90)
+    c.drawLine(x, y, x + math.cos(ang) * r * 0.78, y + math.sin(ang) * r * 0.78, P(color=col(accent, a), stroke=8))
+    c.drawCircle(x, y, 12, P(color=col('#1b2a4a', a)))
+    if label: text_block(c, label, x, y + r * 0.45, size=int(r * 0.32), fill='#1b2a4a', stroke='#ffffff', alpha=a)
+
+def bat(c, x, y, s, t, flap_speed=9.0, alpha=255, colr='#3a2f55', rot=0.0):
+    """Plain flying bat (no face details beyond small eyes)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    f = math.sin(t * flap_speed)
+    for sx in (-1, 1):
+        lift = -60 * f
+        p = skia.Path(); p.moveTo(sx * 20, -10)
+        p.cubicTo(sx * 80, -40 + lift, sx * 160, -60 + lift * 1.2, sx * 210, -20 + lift * 1.3)
+        p.quadTo(sx * 175, 0 + lift * 0.8, sx * 160, 20 + lift * 0.7)
+        p.quadTo(sx * 130, 5 + lift * 0.5, sx * 110, 30 + lift * 0.4)
+        p.quadTo(sx * 80, 15 + lift * 0.3, sx * 60, 35 + lift * 0.2)
+        p.quadTo(sx * 40, 20, sx * 18, 20); p.close()
+        c.drawPath(p, P(color=col(colr, a)))
+    c.drawOval(skia.Rect(-28, -40, 28, 45), P(color=col(mix_hx(colr, '#000000', 0.15), a)))
+    for sx in (-1, 1):
+        e = skia.Path(); e.moveTo(sx * 8, -34); e.lineTo(sx * 22, -66); e.lineTo(sx * 26, -30); e.close()
+        c.drawPath(e, P(color=col(mix_hx(colr, '#000000', 0.15), a)))
+        c.drawCircle(sx * 10, -20, 4.5, P(color=col('#ffffff', a)))
+    c.restore()
+
+def ball(c, x, y, r, colr='#ff5c85', alpha=255, squash=0.0, axis=0.0):
+    """Rubber ball with a highlight; squash 0..1 flattens along `axis` (radians, direction of impact)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(math.degrees(axis)); c.scale(1 - 0.3 * squash, 1 + 0.25 * squash)
+    c.drawCircle(0, 0, r, rad(-r * 0.3, -r * 0.3, r * 1.4, [col(mix_hx(colr, '#ffffff', 0.45), a), col(colr, a), col(mix_hx(colr, '#000000', 0.25), a)], [0, 0.55, 1]))
+    c.drawCircle(-r * 0.35, -r * 0.35, r * 0.22, P(color=col('#ffffff', int(a * 0.6))))
+    c.restore()
+
+CHAM_GREEN, CHAM_ORANGE = '#3fbf6a', '#ff8a2c'
+def cham_color(k):
+    """Chameleon skin colour for excitement k 0..1: calm green -> yellow -> orange/red."""
+    stops = ['#3fbf6a', '#9ad43a', '#ffd23f', '#ff9f1c', '#ff6a3c']
+    k = clamp(k) * (len(stops) - 1); i = min(int(k), len(stops) - 2)
+    return mix_hx(stops[i], stops[i + 1], k - i)
+
+def crystal_color(k):
+    """Colour reflected by the iridophore crystal lattice for spacing k 0..1 (close = blue, wide = red)."""
+    stops = ['#3a6bff', '#2fa8ff', '#4cd964', '#ffe14d', '#ff9f1c', '#ff5c3b']
+    k = clamp(k) * (len(stops) - 1); i = min(int(k), len(stops) - 2)
+    return mix_hx(stops[i], stops[i + 1], k - i)
+
+def branch(c, x0, y0, x1, y1, w=34, alpha=255, leaves=True, t=0.0):
+    a = int(alpha)
+    p = skia.Path(); p.moveTo(x0, y0); p.cubicTo(lerp(x0, x1, 0.33), y0 + 18, lerp(x0, x1, 0.66), y1 - 18, x1, y1)
+    c.drawPath(p, P(color=col('#6e4a2c', a), stroke=w))
+    c.drawPath(p, P(color=col('#8f6440', a), stroke=w * 0.55))
+    if leaves:
+        for i, u in enumerate((0.12, 0.85)):
+            lx, ly = lerp(x0, x1, u), lerp(y0, y1, u)
+            leaf(c, lx, ly - 30, 0.55, t, colr='#5cc94a', seed=i, face_on=False, rot=-30 + 60 * i, alpha=a)
+
+def chameleon(c, x, y, s, t, colr=CHAM_GREEN, alpha=255, look=None, flip=False, pattern=True, tail_curl=1.0):
+    """Plain side-view chameleon gripping a branch at local y=130; (x, y) = body centre. Natural turret eye, no smile."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(-s if flip else s, s)
+    dark = mix_hx(colr, '#0d2a1a', 0.35); light = mix_hx(colr, '#ffffff', 0.35)
+    # tail: tube of circles along a spiral
+    pts = []
+    for i in range(140):
+        u = i / 139
+        if u < 0.35:
+            v = u / 0.35; px, py = lerp(-140, -270, v), lerp(30, 90, v) + 10 * math.sin(v * math.pi)
+        else:
+            v = (u - 0.35) / 0.65; ang = lerp(-math.pi * 0.5, -math.pi * 0.5 - 2.0 * math.pi * tail_curl, v)
+            rr = lerp(75, 14, v); cx, cy = -270, 165
+            px, py = cx + rr * math.cos(ang) * -1, cy + rr * math.sin(ang)
+        pts.append((px, py, lerp(34, 7, u)))
+    for (px, py, rr) in pts: c.drawCircle(px, py, rr + 4, P(color=col(dark, a)))
+    for (px, py, rr) in pts: c.drawCircle(px, py, rr, P(color=col(colr, a)))
+    # back legs
+    def leg(hx, hy, fx, fy):
+        c.drawLine(hx, hy, (hx + fx) / 2 - 12, (hy + fy) / 2 - 6, P(color=col(dark, a), stroke=34))
+        c.drawLine((hx + fx) / 2 - 12, (hy + fy) / 2 - 6, fx, fy, P(color=col(dark, a), stroke=28))
+        c.drawLine(hx, hy, (hx + fx) / 2 - 12, (hy + fy) / 2 - 6, P(color=col(colr, a), stroke=24))
+        c.drawLine((hx + fx) / 2 - 12, (hy + fy) / 2 - 6, fx, fy, P(color=col(colr, a), stroke=18))
+        for dx in (-14, 14): c.drawOval(skia.Rect(fx + dx - 14, fy - 8, fx + dx + 14, fy + 14), P(color=col(dark, a)))
+    leg(-80, 60, -110, 128); leg(130, 50, 160, 128)
+    # body
+    p = skia.Path(); p.moveTo(-160, 20)
+    p.cubicTo(-150, -110, 40, -175, 160, -70)
+    p.cubicTo(200, -110, 230, -125, 250, -95)        # casque
+    p.cubicTo(285, -70, 315, -30, 318, -5)           # snout top
+    p.cubicTo(300, 25, 250, 45, 200, 50)             # jaw
+    p.cubicTo(120, 85, -40, 95, -160, 20); p.close()
+    c.drawPath(p, lin(c, (0, -150, 0, 90), [col(light, a), col(colr, a), col(dark, a)], pos=[0, 0.45, 1]))
+    if pattern:
+        c.save(); c.clipPath(p, doAntiAlias=True)
+        st = skia.Path(); st.moveTo(-150, 20); st.cubicTo(-40, -30, 90, -20, 200, 20)
+        c.drawPath(st, P(color=col(light, int(a * 0.8)), stroke=16))
+        for i in range(5):
+            bx = -110 + i * 60
+            c.drawLine(bx, -95 + abs(i - 2) * 12, bx + 18, 10, P(color=col(dark, int(a * 0.35)), stroke=14))
+        # dorsal crest bumps
+        for i in range(9):
+            bx = -130 + i * 34; by = -95 - 45 * math.sin(lerp(0.4, 2.7, i / 8))
+            c.drawCircle(bx, by + 52, 9, P(color=col(light, int(a * 0.9))))
+        c.restore()
+    c.drawPath(p, P(color=col(dark, a), stroke=6))
+    # mouth line
+    m = skia.Path(); m.moveTo(312, 4); m.quadTo(270, 26, 214, 22); c.drawPath(m, P(color=col(dark, a), stroke=5))
+    # front legs over body
+    leg(-40, 70, -60, 130)
+    # turret eye
+    ex, ey = 232, -38
+    c.drawCircle(ex, ey, 36, P(color=col(dark, a)))
+    c.drawCircle(ex, ey, 31, rad(ex - 8, ey - 8, 40, [col(light, a), col(colr, a)]))
+    for i in range(4):
+        rr = 31 - i * 6
+        c.drawCircle(ex, ey, rr, P(color=col(dark, int(a * 0.25)), stroke=2.5))
+    lx, ly = look if look else (math.sin(t * 0.9) * 0.8, math.sin(t * 0.6 + 1) * 0.5)
+    c.drawCircle(ex + lx * 10, ey + ly * 10, 10, P(color=col('#111111', a)))
+    c.drawCircle(ex + lx * 10 - 3, ey + ly * 10 - 3, 3, P(color=col('#ffffff', a)))
+    c.restore()
+
+def crystal_lattice(c, x0, y0, w_, h_, spacing, t=0.0, r=9, alpha=255, colr='#e8f6ff', clip=True):
+    """Grid of guanine nanocrystals (drawn as small hexagons); spacing 0..1 -> gap between them."""
+    a = int(alpha); gap = lerp(26, 62, clamp(spacing))
+    if clip: c.save(); c.clipRect(skia.Rect(x0, y0, x0 + w_, y0 + h_))
+    cx, cy = x0 + w_ / 2, y0 + h_ / 2
+    nx = int(w_ / gap / 2) + 2; ny = int(h_ / gap / 2) + 2
+    for j in range(-ny, ny + 1):
+        for i in range(-nx, nx + 1):
+            px = cx + i * gap + (gap / 2 if j % 2 else 0); py = cy + j * gap * 0.87
+            pth = hexagon_path(px, py, r)
+            c.drawPath(pth, P(color=col(colr, a)))
+            c.drawPath(pth, P(color=col('#7fa8c9', int(a * 0.8)), stroke=2))
+    if clip: c.restore()
+
+def soap_bubble(c, x, y, r, t, alpha=255):
+    a = int(alpha)
+    c.drawCircle(x, y, r, rad(x, y, r, [col('#ffffff', 0), col('#dff3ff', int(a * 0.35)), col('#ffffff', int(a * 0.7))], [0, 0.85, 1]))
+    for i, hc in enumerate(RAINBOW):
+        pth = skia.Path(); rr = r * (0.92 - i * 0.035)
+        pth.addArc(skia.Rect(x - rr, y - rr, x + rr, y + rr), (t * 40 + i * 9) % 360, 120)
+        c.drawPath(pth, P(color=col(hc, int(a * 0.55)), stroke=r * 0.035))
+    c.drawCircle(x - r * 0.38, y - r * 0.4, r * 0.14, P(color=col('#ffffff', int(a * 0.85))))
+    c.drawCircle(x, y, r, P(color=col('#ffffff', int(a * 0.8)), stroke=3))
+
+def feather(c, x, y, s, t=0.0, rot=0.0, alpha=255):
+    """Peacock-style tail feather with an eye-spot (structural colour)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    c.drawLine(0, 300, 0, -170, P(color=col('#c9b27a', a), stroke=8))
+    for i in range(26):
+        yy = 260 - i * 17; L = 40 + 110 * math.sin(math.pi * i / 25) ** 0.7
+        for sx in (-1, 1):
+            c.drawLine(0, yy, sx * L, yy - 40, P(color=col(mix_hx('#3fae6a', '#a9d86e', i / 25), int(a * 0.8)), stroke=5))
+    for rr, hc in ((120, '#2f7d4a'), (95, '#d9b23a'), (72, '#1f9e8a'), (50, '#2a5bd8'), (28, '#152a6e')):
+        c.drawOval(skia.Rect(-rr * 0.8, -110 - rr, rr * 0.8, -110 + rr * 0.9), P(color=col(hc, a)))
+    sh = 0.5 + 0.5 * math.sin(t * 2)
+    c.drawOval(skia.Rect(-30, -190, 30, -120), P(color=col('#ffffff', int(a * 0.25 * sh))))
+    c.restore()
+
+def spider(c, x, y, s, t, alpha=255, body='#4a3f6b', mark='#ffd23f', walk=0.0, rot=0.0):
+    """Plain garden-spider (top view, head up at rot=0): round abdomen with a pattern, 8 jointed legs. walk animates legs."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    dark = mix_hx(body, '#000000', 0.3)
+    for sx in (-1, 1):
+        for i in range(4):
+            base_ang = [-55, -20, 15, 50][i]
+            wig = 8 * math.sin(t * 10 * walk + i * 1.7 + (0 if sx > 0 else 1.5)) * walk
+            ang = math.radians(base_ang + wig)
+            hx, hy = sx * 18, -50 + i * 14
+            kx, ky = hx + sx * math.cos(ang) * 95, hy + math.sin(ang) * 95 - 45
+            fx, fy = kx + sx * math.cos(ang + sx * 0.0) * 40, ky + 75 + (i - 1.5) * 12
+            if i == 0: fy = ky - 40; fx = kx + sx * 30
+            p = skia.Path(); p.moveTo(hx, hy); p.lineTo(kx, ky); p.lineTo(fx, fy)
+            c.drawPath(p, P(color=col(dark, a), stroke=9))
+    # cephalothorax
+    c.drawOval(skia.Rect(-34, -80, 34, -10), P(color=col(dark, a)))
+    c.drawOval(skia.Rect(-30, -76, 30, -14), lin(c, (0, -80, 0, -10), [col(mix_hx(body, '#ffffff', 0.15), a), col(body, a)]))
+    # abdomen
+    c.drawOval(skia.Rect(-62, -20, 62, 120), P(color=col(dark, a)))
+    c.drawOval(skia.Rect(-58, -16, 58, 116), rad(-15, 20, 110, [col(mix_hx(body, '#ffffff', 0.2), a), col(body, a)]))
+    for i in range(3):
+        yy = 15 + i * 30; ww = 34 - i * 8
+        pth = skia.Path(); pth.moveTo(-ww, yy); pth.quadTo(0, yy + 18, ww, yy)
+        c.drawPath(pth, P(color=col(mark, int(a * 0.9)), stroke=7))
+    c.drawCircle(0, -5, 8, P(color=col(mark, a)))
+    # small eyes on head
+    for ex in (-9, 9): c.drawCircle(ex, -66, 4.5, P(color=col('#111111', a)))
+    c.restore()
+
+def orb_web(c, cx, cy, R, t=0.0, frame=1.0, spokes=1.0, spiral=1.0, n=16, alpha=255, glue=True, colr='#ffffff', anchors=None):
+    """Orb web: frame polygon, radial spokes (dry), sticky capture spiral laid from outside in (spiral 0..1)."""
+    a = int(alpha); rnd = random.Random(5)
+    rr = [R * (0.88 + 0.12 * rnd.random()) for _ in range(n)]
+    pts = [(cx + math.cos(2 * math.pi * i / n - math.pi / 2) * rr[i], cy + math.sin(2 * math.pi * i / n - math.pi / 2) * rr[i]) for i in range(n)]
+    sh = P(color=col('#1b2a4a', int(a * 0.15)), stroke=6, blur=2)
+    if anchors and frame > 0:
+        for (ax, ay), (px, py) in anchors:
+            c.drawLine(px, py, lerp(px, ax, frame), lerp(py, ay, frame), P(color=col(colr, a), stroke=4))
+    if frame > 0:
+        m = int(n * frame) + 1
+        for i in range(min(m, n)):
+            p0, p1 = pts[i], pts[(i + 1) % n]
+            k = clamp(n * frame - i)
+            c.drawLine(p0[0], p0[1], lerp(p0[0], p1[0], k), lerp(p0[1], p1[1], k), P(color=col(colr, a), stroke=4.5))
+    if spokes > 0:
+        for i in range(n):
+            k = clamp(n * spokes - i)
+            if k <= 0: break
+            c.drawLine(cx, cy, lerp(cx, pts[i][0], k), lerp(cy, pts[i][1], k), P(color=col(colr, int(a * 0.95)), stroke=3.5))
+    if spiral > 0:
+        turns = 9; total = turns * n; done = int(total * spiral)
+        prev = None
+        for j in range(done + 1):
+            ring = j / n; i = j % n
+            f = lerp(0.9, 0.22, ring / turns)
+            px, py = lerp(cx, pts[i][0], f), lerp(cy, pts[i][1], f)
+            if prev:
+                c.drawLine(prev[0], prev[1], px, py, P(color=col(colr, a), stroke=3))
+                if glue:
+                    for g in (0.33, 0.66):
+                        c.drawCircle(lerp(prev[0], px, g), lerp(prev[1], py, g), 3.4, P(color=col('#fff3a8', a)))
+            prev = (px, py)
+        return prev
+    return None
