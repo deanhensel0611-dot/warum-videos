@@ -31,7 +31,7 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How do echoes work? → ep_026_how_do_echoes_work
 - [x] How do chameleons change color? → ep_027_how_do_chameleons_change_color
 - [x] How do spiders make webs? → ep_028_how_do_spiders_make_webs
-- [ ] Why do we have to brush our teeth?
+- [x] Why do we have to brush our teeth? → ep_029_why_do_we_have_to_brush_our_teeth
 - [ ] How do clouds float?
 - [ ] Why are bubbles round?
 - [ ] How do bats find their way in the dark?

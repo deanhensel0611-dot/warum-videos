@@ -2333,3 +2333,110 @@ def orb_web(c, cx, cy, R, t=0.0, frame=1.0, spokes=1.0, spiral=1.0, n=16, alpha=
             prev = (px, py)
         return prev
     return None
+
+def tooth_path(s=1.0):
+    """Molar outline (crown + two roots), centred at crown middle (0, 0); s scales."""
+    p = skia.Path()
+    p.moveTo(-150 * s, -40 * s)
+    p.cubicTo(-160 * s, -150 * s, -110 * s, -175 * s, -75 * s, -150 * s)     # left cusp
+    p.cubicTo(-40 * s, -185 * s, -15 * s, -165 * s, 0, -140 * s)
+    p.cubicTo(15 * s, -165 * s, 40 * s, -185 * s, 75 * s, -150 * s)
+    p.cubicTo(110 * s, -175 * s, 160 * s, -150 * s, 150 * s, -40 * s)       # right cusp
+    p.cubicTo(145 * s, 40 * s, 120 * s, 80 * s, 110 * s, 120 * s)           # neck right
+    p.cubicTo(100 * s, 220 * s, 90 * s, 300 * s, 60 * s, 330 * s)           # right root
+    p.cubicTo(40 * s, 340 * s, 30 * s, 250 * s, 15 * s, 150 * s)
+    p.cubicTo(5 * s, 130 * s, -5 * s, 130 * s, -15 * s, 150 * s)
+    p.cubicTo(-30 * s, 250 * s, -40 * s, 340 * s, -60 * s, 330 * s)         # left root
+    p.cubicTo(-90 * s, 300 * s, -100 * s, 220 * s, -110 * s, 120 * s)
+    p.cubicTo(-120 * s, 80 * s, -145 * s, 40 * s, -150 * s, -40 * s)
+    p.close(); return p
+
+def tooth(c, x, y, s, t=0.0, plaque=0.0, tartar=0.0, cavity=0.0, section=0.0, gum=True, shine=1.0, alpha=255, weak=0.0, repair=0.0):
+    """Plain molar (no face). plaque/tartar 0..1 film on the crown, cavity 0..1 hole on the left cusp,
+    section 0..1 shows enamel/dentin/pulp cut-away, weak 0..1 = chalky spots, repair 0..1 = fluoride shimmer."""
+    a = int(alpha); c.save(); c.translate(x, y)
+    p = tooth_path(s)
+    c.drawPath(p, P(color=col('#1b2a4a', int(a * 0.18)), blur=10))
+    c.drawPath(p, lin(c, (-150 * s, 0, 150 * s, 0), [col('#e9f1fb', a), col('#ffffff', a), col('#dfe9f5', a)], vertical=False))
+    if section > 0:
+        sa = int(a * section)
+        d = tooth_path(s * 0.8); c.save(); c.translate(0, 18 * s)
+        c.drawPath(d, P(color=col('#f6e3b8', sa)))
+        pu = skia.Path(); pu.addOval(skia.Rect(-55 * s, -70 * s, 55 * s, 40 * s))
+        c.drawPath(pu, P(color=col('#ff9fb0', sa)))
+        c.drawLine(-30 * s, 30 * s, -45 * s, 230 * s, P(color=col('#ff9fb0', sa), stroke=16 * s))
+        c.drawLine(30 * s, 30 * s, 45 * s, 230 * s, P(color=col('#ff9fb0', sa), stroke=16 * s))
+        c.restore()
+    if weak > 0:
+        rnd = random.Random(4)
+        for i in range(7):
+            px, py = rnd.uniform(-120, 120) * s, rnd.uniform(-150, -60) * s
+            c.drawCircle(px, py, rnd.uniform(10, 18) * s, P(color=col('#f3ead8', int(a * weak * 0.9))))
+    if cavity > 0:
+        cx, cy = -80 * s, -140 * s
+        hp = skia.Path(); hp.addOval(skia.Rect(cx - 45 * s * cavity, cy - 10 * s, cx + 45 * s * cavity, cy + 70 * s * cavity))
+        c.save(); c.clipPath(p, doAntiAlias=True)
+        c.drawPath(hp, P(color=col('#6b5a4a', a))); c.drawPath(hp, P(color=col('#4a3c30', a), stroke=4 * s))
+        c.restore()
+    if plaque > 0 or tartar > 0:
+        c.save(); c.clipPath(p, doAntiAlias=True)
+        film = skia.Path(); film.addRect(skia.Rect(-200 * s, -200 * s, 200 * s, 110 * s))
+        c.drawPath(film, P(color=col('#f2e08a', int(a * 0.55 * plaque))))
+        rnd = random.Random(9)
+        for i in range(26):
+            px, py = rnd.uniform(-150, 150) * s, rnd.uniform(-170, 100) * s
+            c.drawCircle(px, py, rnd.uniform(5, 11) * s, P(color=col('#e8c94f', int(a * 0.7 * plaque))))
+        if tartar > 0:
+            band = skia.Path(); band.moveTo(-160 * s, 40 * s)
+            for i in range(13):
+                xx = lerp(-160, 160, i / 12) * s
+                band.lineTo(xx, (60 - 18 * (i % 2)) * s)
+            band.lineTo(160 * s, 115 * s); band.lineTo(-160 * s, 115 * s); band.close()
+            c.drawPath(band, P(color=col('#cdb27a', int(a * tartar))))
+            c.drawPath(band, P(color=col('#9c8150', int(a * tartar)), stroke=4 * s))
+        c.restore()
+    if repair > 0:
+        for i in range(6):
+            ang = t * 2 + i * 1.05; rr = 90 * s
+            twinkle(c, math.cos(ang) * rr, -110 * s + math.sin(ang) * 30 * s, 16 * s, colr='#7fe0ff', alpha=int(a * repair))
+    c.drawPath(p, P(color=col('#8aa0bf', a), stroke=5 * s))
+    if shine > 0:
+        hl = skia.Path(); hl.moveTo(-110 * s, -120 * s); hl.quadTo(-120 * s, -60 * s, -105 * s, 0)
+        c.drawPath(hl, P(color=col('#ffffff', int(a * 0.9 * shine)), stroke=14 * s))
+    if gum:
+        g = skia.Path(); g.moveTo(-1300, 90 * s); g.lineTo(-260 * s, 90 * s)
+        g.cubicTo(-200 * s, 60 * s, -150 * s, 70 * s, -120 * s, 105 * s)
+        g.cubicTo(-60 * s, 140 * s, 60 * s, 140 * s, 120 * s, 105 * s)
+        g.cubicTo(150 * s, 70 * s, 200 * s, 60 * s, 260 * s, 90 * s)
+        g.lineTo(1300, 90 * s); g.lineTo(1300, 1400); g.lineTo(-1300, 1400); g.close()
+        c.drawPath(g, lin(c, (0, 80 * s, 0, 400 * s), [col('#ff9fb3', a), col('#f07d97', a)]))
+        c.drawPath(g, P(color=col('#d9607e', a), stroke=4 * s))
+    c.restore()
+
+def toothbrush(c, x, y, s=1.0, rot=0.0, alpha=255, handle='#2f9bff'):
+    """Toothbrush, bristles pointing down at rot=0; (x, y) = centre of the bristle head."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(60, -40, 520, -10), 15, 15, P(color=col(handle, a)))
+    c.drawRoundRect(skia.Rect(-90, -46, 80, -14), 14, 14, P(color=col(handle, a)))
+    c.drawRoundRect(skia.Rect(200, -34, 420, -18), 8, 8, P(color=col('#ffffff', int(a * 0.45))))
+    for i in range(9):
+        bx = -80 + i * 19
+        c.drawRoundRect(skia.Rect(bx, -16, bx + 13, 40), 5, 5, P(color=col('#ffffff' if i % 2 else '#bfe6ff', a)))
+        c.drawRoundRect(skia.Rect(bx, -16, bx + 13, 40), 5, 5, P(color=col('#8aa0bf', int(a * 0.6)), stroke=2))
+    c.restore()
+
+def bacterium(c, x, y, r, t, seed=0, alpha=255, colr='#9b7be0', rot=None):
+    """Simple rod-shaped bacterium (no face), gently wobbling."""
+    a = int(alpha); rnd = random.Random(seed)
+    ang = rot if rot is not None else rnd.uniform(0, 180) + 12 * math.sin(t * 2 + seed)
+    c.save(); c.translate(x, y); c.rotate(ang)
+    c.drawRoundRect(skia.Rect(-r * 1.6, -r * 0.75, r * 1.6, r * 0.75), r * 0.75, r * 0.75, P(color=col(mix_hx(colr, '#000000', 0.25), a)))
+    c.drawRoundRect(skia.Rect(-r * 1.5, -r * 0.62, r * 1.5, r * 0.62), r * 0.62, r * 0.62, lin(c, (0, -r, 0, r), [col(mix_hx(colr, '#ffffff', 0.35), a), col(colr, a)]))
+    c.drawCircle(-r * 0.6, -r * 0.1, r * 0.18, P(color=col('#ffffff', int(a * 0.5))))
+    c.restore()
+
+def acid_drop(c, x, y, r, alpha=255, colr='#b6e83a'):
+    a = int(alpha); p = skia.Path(); p.moveTo(x, y - r * 1.6)
+    p.cubicTo(x + r * 0.9, y - r * 0.4, x + r, y + r, x, y + r); p.cubicTo(x - r, y + r, x - r * 0.9, y - r * 0.4, x, y - r * 1.6); p.close()
+    c.drawPath(p, P(color=col(colr, a))); c.drawPath(p, P(color=col(mix_hx(colr, '#000000', 0.3), a), stroke=3))
+    c.drawCircle(x - r * 0.35, y, r * 0.22, P(color=col('#ffffff', int(a * 0.6))))
