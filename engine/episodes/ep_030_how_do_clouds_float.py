@@ -63,7 +63,7 @@ def s2(c, t, D, cues):
     if t > t1:
         k = ease_back(prog(t, t1 + 0.3, 0.5))
         c.drawRoundRect(skia.Rect(60, 640, W - 60, 1560), 48, 48, P(color=col('#eef7ff', int(240 * min(1, prog(t, t1, 0.3))))))
-        raindrop(c, 330, 1130, 120 * k, t, face_on=False)
+        if k > 0: raindrop(c, 330, 1130, 120 * k, t, face_on=False)
         if k > 0: label_pill(c, 'RAINDROP', 330, 1370, size=40, k=k, fill=NAVY, hi='#2f9bff')
         k2 = ease_back(prog(t, t1 + 0.9, 0.5))
         if k2 > 0:
