@@ -32,10 +32,10 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How do chameleons change color? → ep_027_how_do_chameleons_change_color
 - [x] How do spiders make webs? → ep_028_how_do_spiders_make_webs
 - [x] Why do we have to brush our teeth? → ep_029_why_do_we_have_to_brush_our_teeth
-- [ ] How do clouds float?
-- [ ] Why are bubbles round?
-- [ ] How do bats find their way in the dark?
-- [ ] How do earthquakes happen?
+- [x] How do clouds float? → ep_030_how_do_clouds_float
+- [x] Why are bubbles round? → ep_031_why_are_bubbles_round
+- [x] How do bats find their way in the dark? → ep_032_how_do_bats_find_their_way_in_the_dark
+- [x] How do earthquakes happen? → ep_033_how_do_earthquakes_happen
 - [ ] Why can we sometimes see the Moon during the day?
 - [ ] Why don't penguins freeze?
 - [ ] How does a seed grow into a plant?

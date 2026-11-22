@@ -2440,3 +2440,62 @@ def acid_drop(c, x, y, r, alpha=255, colr='#b6e83a'):
     p.cubicTo(x + r * 0.9, y - r * 0.4, x + r, y + r, x, y + r); p.cubicTo(x - r, y + r, x - r * 0.9, y - r * 0.4, x, y - r * 1.6); p.close()
     c.drawPath(p, P(color=col(colr, a))); c.drawPath(p, P(color=col(mix_hx(colr, '#000000', 0.3), a), stroke=3))
     c.drawCircle(x - r * 0.35, y, r * 0.22, P(color=col('#ffffff', int(a * 0.6))))
+
+# ---------------- Clouds / weight icons (added for ep_030) ----------------
+def elephant(c, x, y, s, alpha=255, colr='#8f9bb3', t=0.0):
+    """Plain side-view elephant icon (flat infographic style), facing right. x,y = feet baseline centre."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    dark = mix_hx(colr, '#1b2a4a', 0.25)
+    for lx in (-62, -30, 28, 58):
+        c.drawRoundRect(skia.Rect(lx - 15, -70, lx + 15, 0), 10, 10, P(color=col(dark if lx in (-30, 58) else colr, a)))
+    body = skia.Path(); body.addOval(skia.Rect(-95, -165, 85, -45)); c.drawPath(body, P(color=col(colr, a)))
+    tail = skia.Path(); tail.moveTo(-92, -120); tail.quadTo(-118, -95, -110, -70)
+    c.drawPath(tail, P(color=col(dark, a), stroke=6))
+    c.drawCircle(92, -150, 52, P(color=col(colr, a)))
+    tr = skia.Path(); tr.moveTo(126, -150); tr.cubicTo(160, -120, 150, -70, 160, -40)
+    c.drawPath(tr, P(color=col(colr, a), stroke=26))
+    c.drawCircle(160, -40, 13, P(color=col(colr, a)))
+    c.drawOval(skia.Rect(50, -185, 100, -105), P(color=col(dark, a)))
+    tk = skia.Path(); tk.moveTo(118, -118); tk.quadTo(138, -100, 150, -104)
+    c.drawPath(tk, P(color=col('#fffaf0', a), stroke=8))
+    c.drawCircle(112, -162, 5, P(color=col('#1b2a4a', a)))
+    c.restore()
+
+def updraft(c, x, y0, y1, t, w=14, colr='#ffffff', alpha=200, speed=260, seed=0, spacing=150):
+    """Column of rising chevron arrows between y0 (bottom) and y1 (top)."""
+    span = y0 - y1
+    for k in range(int(span // spacing) + 2):
+        yy = y0 - ((t * speed + k * spacing + seed * 37) % (span + spacing))
+        if yy < y1 - 20 or yy > y0: continue
+        f = min(1.0, (y0 - yy) / 80, (yy - y1 + 20) / 80)
+        xx = x + math.sin(t * 2 + k + seed) * 8
+        p = skia.Path(); p.moveTo(xx - 32, yy + 22); p.lineTo(xx, yy - 10); p.lineTo(xx + 32, yy + 22)
+        c.drawPath(p, P(color=col(colr, int(alpha * max(0, f))), stroke=w))
+
+# ---------------- Bats / echolocation (added for ep_032) ----------------
+def moth(c, x, y, s, t, flap=14.0, alpha=255, colr='#e8d3a8', rot=0.0):
+    """Plain top-view moth (no face). Wings flutter by squashing horizontally."""
+    a = int(alpha); f = 0.55 + 0.45 * abs(math.sin(t * flap))
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    dark = mix_hx(colr, '#5a4632', 0.45)
+    for sx in (-1, 1):
+        c.save(); c.scale(sx * f, 1)
+        fw = skia.Path(); fw.moveTo(6, -10); fw.cubicTo(40, -70, 110, -70, 120, -30); fw.cubicTo(115, 0, 60, 10, 6, 4); fw.close()
+        hw = skia.Path(); hw.moveTo(6, 4); hw.cubicTo(60, 10, 95, 40, 80, 70); hw.cubicTo(55, 90, 20, 50, 6, 20); hw.close()
+        c.drawPath(hw, P(color=col(dark, a))); c.drawPath(fw, P(color=col(colr, a)))
+        c.drawPath(fw, P(color=col(dark, a), stroke=3))
+        c.drawCircle(70, -30, 10, P(color=col(dark, int(a * 0.8))))
+        c.restore()
+    c.drawOval(skia.Rect(-10, -30, 10, 60), P(color=col(dark, a)))
+    for sx in (-1, 1):
+        an = skia.Path(); an.moveTo(sx * 3, -28); an.quadTo(sx * 18, -60, sx * 30, -66)
+        c.drawPath(an, P(color=col(dark, a), stroke=3))
+    c.restore()
+
+def echo_map(c, pts, x, y, s, k, colr='#5ff0ff', t=0.0):
+    """Shape drawn as glowing sonar dots; k = 0..1 how many dots are revealed."""
+    n = int(len(pts) * k)
+    for i, (px, py) in enumerate(pts[:n]):
+        X, Y = x + px * s, y + py * s
+        c.drawCircle(X, Y, 16, rad(X, Y, 16, [col(colr, 150), col(colr, 0)]))
+        c.drawCircle(X, Y, 5.5, P(color=col('#ffffff', 235)))
