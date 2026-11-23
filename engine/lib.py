@@ -2499,3 +2499,284 @@ def echo_map(c, pts, x, y, s, k, colr='#5ff0ff', t=0.0):
         X, Y = x + px * s, y + py * s
         c.drawCircle(X, Y, 16, rad(X, Y, 16, [col(colr, 150), col(colr, 0)]))
         c.drawCircle(X, Y, 5.5, P(color=col('#ffffff', 235)))
+
+# ---------------- Daytime moon, penguin, seed, ear (added for ep_034+) ----------------
+_MARIA = [(-0.35, -0.3, 0.2), (0.25, -0.35, 0.16), (0.3, 0.2, 0.18), (-0.1, 0.05, 0.12), (-0.4, 0.35, 0.1), (0.05, 0.5, 0.09)]
+def day_moon(c, x, y, r, phase=0.5, alpha=230, lit_dir=0.0):
+    """Pale moon as seen in a blue daytime sky: only the lit part is visible, slightly see-through, with soft grey-blue maria."""
+    lit = moon_lit_path(x, y, r, phase, lit_dir)
+    if lit is None: return
+    a = int(alpha)
+    c.save(); c.clipPath(lit, doAntiAlias=True)
+    c.drawCircle(x, y, r, rad(x - r * 0.3, y - r * 0.35, r * 1.6, [col('#ffffff', a), col('#f2f6fc', a), col('#d5e0ef', a)], [0, 0.5, 1]))
+    for dx, dy, rr in _MARIA:
+        c.drawCircle(x + dx * r, y + dy * r, rr * r, P(color=col('#a9bbd6', int(a * 0.55)), blur=r * 0.03))
+    c.restore()
+
+def gray_moon(c, x, y, r, t=0.0, alpha=255, glow=0.0):
+    """Realistic dark-grey moon (true colour ~ worn asphalt), craters + maria, full disc lit."""
+    a = int(alpha)
+    if glow > 0:
+        c.drawCircle(x, y, r * 1.5, rad(x, y, r * 1.5, [col('#ffffff', int(90 * glow)), col('#ffffff', 0)]))
+    c.save(); cl = skia.Path(); cl.addCircle(x, y, r); c.clipPath(cl, doAntiAlias=True)
+    c.drawCircle(x, y, r, rad(x - r * 0.35, y - r * 0.35, r * 1.7, [col('#9a9a9e', a), col('#6f7075', a), col('#4a4b50', a)], [0, 0.55, 1]))
+    for dx, dy, rr in _MARIA:
+        c.drawCircle(x + dx * r, y + dy * r, rr * r, P(color=col('#4e4f55', int(a * 0.8)), blur=r * 0.02))
+    rnd = random.Random(7)
+    for i in range(16):
+        cx, cy, cr = x + rnd.uniform(-0.8, 0.8) * r, y + rnd.uniform(-0.8, 0.8) * r, rnd.uniform(0.03, 0.08) * r
+        c.drawCircle(cx, cy, cr, P(color=col('#5b5c62', a)))
+        c.drawArc(skia.Rect(cx - cr, cy - cr, cx + cr, cy + cr), 200, 140, False, P(color=col('#b4b5ba', int(a * 0.8)), stroke=max(1.5, cr * 0.25)))
+    c.restore()
+    c.drawCircle(x, y, r, P(color=col('#2e2f33', int(a * 0.6)), stroke=max(2, r * 0.02)))
+
+def penguin(c, x, y, s, t, alpha=255, flip=False, flipper=0.0, sway=1.0, seed=0):
+    """Plain emperor penguin, 3/4 view facing right (flip=True faces left). (x, y) = between the feet. Height ~ 400*s."""
+    a = int(alpha)
+    c.drawOval(skia.Rect(x - 120 * s, y - 14 * s, x + 120 * s, y + 14 * s), P(color=col('#0b1a3a', int(a * 0.18)), blur=6 * s))
+    c.save(); c.translate(x, y); c.scale(-s if flip else s, s)
+    c.rotate(math.sin(t * 1.6 + seed) * 2.5 * sway)
+    # flippers (behind body)
+    for side, base in ((-1, -235), (1, -235)):
+        c.save(); c.translate(side * 108, base); c.rotate(side * (8 + 18 * flipper * (0.5 + 0.5 * math.sin(t * 9 + side))))
+        fp = skia.Path(); fp.moveTo(0, 0); fp.cubicTo(side * 38, 20, side * 46, 120, side * 24, 175); fp.cubicTo(side * 14, 150, side * -4, 80, side * -6, 10); fp.close()
+        c.drawPath(fp, lin(c, (0, 0, 0, 175), [col('#2a3142', a), col('#141821', a)])); c.restore()
+    body = skia.Path(); body.moveTo(0, -335)
+    body.cubicTo(112, -325, 142, -160, 122, -45); body.cubicTo(110, 4, -110, 4, -122, -45); body.cubicTo(-142, -160, -112, -325, 0, -335); body.close()
+    c.drawPath(body, lin(c, (-130, 0, 130, 0), [col('#151922', a), col('#2b3345', a)], vertical=False))
+    belly = skia.Path(); belly.moveTo(18, -300)
+    belly.cubicTo(92, -290, 112, -150, 96, -50); belly.cubicTo(80, -8, -52, -8, -74, -50); belly.cubicTo(-90, -150, -58, -290, 18, -300); belly.close()
+    c.drawPath(belly, lin(c, (0, -300, 0, -20), [col('#fff1b8', a), col('#ffffff', a), col('#e7edf5', a)], pos=[0, 0.3, 1]))
+    c.drawPath(belly, P(color=col('#c9d3e0', int(a * 0.6)), stroke=3))
+    # head
+    c.drawCircle(8, -338, 66, rad(-10, -370, 90, [col('#2b3345', a), col('#151922', a)]))
+    # golden ear patch
+    ep = skia.Path(); ep.moveTo(36, -318); ep.cubicTo(70, -320, 78, -290, 62, -262); ep.cubicTo(50, -276, 34, -292, 36, -318); ep.close()
+    c.drawPath(ep, lin(c, (0, -320, 0, -262), [col('#ffb020', a), col('#ffe38a', a)]))
+    # beak
+    bk = skia.Path(); bk.moveTo(52, -350); bk.cubicTo(90, -352, 118, -340, 134, -326); bk.cubicTo(110, -328, 80, -326, 54, -326); bk.close()
+    c.drawPath(bk, P(color=col('#1a1d24', a)))
+    c.drawLine(64, -329, 118, -328, P(color=col('#ff8a3d', a), stroke=6))
+    # eye (natural, small)
+    c.drawCircle(40, -352, 7, P(color=col('#07080c', a)))
+    c.drawCircle(42, -354, 2.2, P(color=col('#ffffff', int(a * 0.8))))
+    # feet
+    for fx in (-38, 42):
+        c.drawOval(skia.Rect(fx - 34, -12, fx + 34, 10), P(color=col('#2a2f3a', a)))
+    c.restore()
+
+def penguin_top(c, x, y, s, rot=0.0, alpha=255):
+    """Penguin seen from above (for huddles): dark oval back, head with golden patches, beak pointing to rot (degrees)."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    c.drawOval(skia.Rect(-34, -26, 34, 26), P(color=col('#000000', int(a * 0.15)), blur=4))
+    c.drawOval(skia.Rect(-36, -28, 30, 28), lin(c, (0, -28, 0, 28), [col('#2b3345', a), col('#151922', a)]))
+    c.drawCircle(30, 0, 17, P(color=col('#1d2230', a)))
+    for sy in (-1, 1):
+        c.drawOval(skia.Rect(24, sy * 12 - 5, 36, sy * 12 + 5), P(color=col('#ffc23a', a)))
+    c.drawLine(44, 0, 58, 0, P(color=col('#1a1d24', a), stroke=6))
+    c.restore()
+
+def bean_path(s=1.0, swell=0.0):
+    """Kidney-shaped bean outline centred at 0,0 (about 200x130 at s=1; swell enlarges ~25 %)."""
+    k = s * (1 + 0.25 * swell)
+    p = skia.Path(); p.moveTo(-100 * k, -10 * k)
+    p.cubicTo(-100 * k, -75 * k, 100 * k, -80 * k, 100 * k, -5 * k)
+    p.cubicTo(100 * k, 60 * k, 30 * k, 70 * k, 10 * k, 42 * k)
+    p.cubicTo(0, 30 * k, -20 * k, 30 * k, -30 * k, 45 * k)
+    p.cubicTo(-60 * k, 75 * k, -100 * k, 50 * k, -100 * k, -10 * k)
+    p.close(); return p
+
+def bean_seed(c, x, y, s, t=0.0, swell=0.0, crack=0.0, section=0.0, rot=0.0, alpha=255, coat='#c46a4a'):
+    """Bean seed. section 0..1 fades in the cut-away (coat ring, food store, embryo). crack splits the coat."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(rot)
+    p = bean_path(s, swell); k = s * (1 + 0.25 * swell)
+    c.drawPath(p, rad(-40 * k, -40 * k, 160 * k, [col('#e8907a', a), col(coat, a), col('#8e4430', a)], [0, 0.5, 1]))
+    if section > 0:
+        inner = bean_path(s * 0.86, swell); inner.offset(0, 2 * k)
+        c.drawPath(inner, rad(-30 * k, -30 * k, 140 * k, [col('#fff6d6', int(a * section)), col('#f5deaa', int(a * section))]))
+        # embryo near the hilum (inner curve)
+        ep = skia.Path(); ep.moveTo(-14 * k, 26 * k); ep.cubicTo(-40 * k, 10 * k, -46 * k, -20 * k, -30 * k, -36 * k)
+        c.drawPath(ep, P(color=col('#b5d36a', int(a * section)), stroke=14 * k))
+        for sd in (-1, 1):
+            lp = skia.Path(); lp.moveTo(-30 * k, -36 * k); lp.quadTo(-30 * k + sd * 22 * k, -60 * k, -30 * k + sd * 6 * k, -62 * k); lp.quadTo(-30 * k + sd * 4 * k, -46 * k, -30 * k, -36 * k)
+            c.drawPath(lp, P(color=col('#8fc24a', int(a * section))))
+        c.drawPath(inner, P(color=col('#d9b77a', int(a * section)), stroke=3))
+    else:
+        c.drawOval(skia.Rect(-8 * k, 30 * k, 26 * k, 42 * k), P(color=col('#5a2a1c', int(a * 0.8))))
+    c.drawOval(skia.Rect(-60 * k, -50 * k, 10 * k, -28 * k), P(color=col('#ffffff', int(a * 0.35)), blur=4 * k))
+    if crack > 0:
+        cp = skia.Path(); cp.moveTo(-80 * k, -30 * k)
+        pts = [(-50, -48), (-20, -40), (10, -55), (40, -44), (70, -52)]
+        n = max(1, int(len(pts) * crack + 0.999))
+        for px, py in pts[:n]: cp.lineTo(px * k, py * k)
+        c.drawPath(cp, P(color=col('#fff6d6', a), stroke=7 * k))
+        c.drawPath(cp, P(color=col('#5a2a1c', a), stroke=2.5 * k))
+    c.drawPath(p, P(color=col('#6e321f', int(a * 0.7)), stroke=3 * k))
+    c.restore()
+
+def seedling(c, x, y, s, t, root=0.0, shoot=0.0, unhook=0.0, leaves=0.0, hairs=0.0, root_dir=90.0, alpha=255):
+    """Germinating seedling growing from (x, y) (the seed). root: 0..1 primary root length (curves to straight down),
+    shoot: 0..1 stem length (up), unhook: 0 = hooked tip (in soil), 1 = straight; leaves: 0..1 first leaves open."""
+    a = int(alpha)
+    if root > 0:
+        L = 420 * s * root; p = skia.Path(); p.moveTo(x, y)
+        d0 = math.radians(root_dir); n = 24; px, py = x, y
+        for i in range(1, n + 1):
+            u = i / n; ang = lerp(d0, math.pi / 2, ease_out(min(1, u * 1.4)))
+            px += math.cos(ang) * L / n; py += math.sin(ang) * L / n; p.lineTo(px, py)
+        c.drawPath(p, P(color=col('#e9d6a8', a), stroke=16 * s)); c.drawPath(p, P(color=col('#fff4d8', a), stroke=8 * s))
+        if hairs > 0:
+            meas = skia.PathMeasure(p, False); LL = meas.getLength()
+            for j in range(14):
+                d = LL * (0.25 + 0.7 * j / 14)
+                pos, tan = meas.getPosTan(d)
+                if pos is None: continue
+                (qx, qy), (tx, ty) = pos, tan
+                sd = 1 if j % 2 else -1; hl = 46 * s * hairs * (1 - j / 20)
+                c.drawLine(qx, qy, qx + (-ty * sd) * hl + tx * hl * 0.5, qy + (tx * sd) * hl + ty * hl * 0.5, P(color=col('#f3e6c2', int(a * 0.9)), stroke=4 * s))
+    if shoot > 0:
+        Hh = 380 * s * shoot
+        sw = math.sin(t * 1.3) * 6 * s * unhook
+        top = (x + sw, y - Hh)
+        stem = skia.Path(); stem.moveTo(x, y); stem.quadTo(x, y - Hh * 0.6, top[0], top[1])
+        hook_ang = (1 - unhook) * 160
+        hr = 34 * s
+        # hook: arc continuing from the top, bending the tip back down
+        hp = skia.Path(); hp.moveTo(*top); steps = 10; hx, hy = top
+        for i in range(1, steps + 1):
+            ang = math.radians(-90 + hook_ang * i / steps)
+            hx += math.cos(ang) * hr * math.radians(max(hook_ang, 1)) / steps * 1.0 if hook_ang > 1 else 0
+            hy += math.sin(ang) * hr * math.radians(max(hook_ang, 1)) / steps * 1.0 if hook_ang > 1 else 0
+            hp.lineTo(hx, hy)
+        for pth in (stem, hp):
+            c.drawPath(pth, P(color=col('#3f8f2e', a), stroke=22 * s)); c.drawPath(pth, P(color=col('#7ed957', a), stroke=12 * s))
+        tipx, tipy = (hx, hy) if hook_ang > 1 else top
+        if leaves > 0:
+            for sd in (-1, 1):
+                leaf(c, tipx + sd * 90 * s * leaves, tipy - 30 * s * leaves, s * 1.05 * leaves, t, colr='#5cc94a', seed=3 + sd,
+                     face_on=False, rot=sd * (70 - 10 * leaves) + math.sin(t * 1.5 + sd) * 3, alpha=a)
+        else:
+            c.drawOval(skia.Rect(tipx - 14 * s, tipy - 10 * s, tipx + 14 * s, tipy + 10 * s), P(color=col('#b5e06a', a)))
+
+def palm_sapling(c, x, y, s, t, alpha=255):
+    """Young date palm: short trunk with arching fronds. (x, y) = base."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(-22, -180, 22, 0), 14, 14, lin(c, (-22, 0, 22, 0), [col('#a8794e', a), col('#7a5333', a)], vertical=False))
+    for i in range(6):
+        c.drawLine(-22, -30 - i * 28, 22, -38 - i * 28, P(color=col('#5e3f26', int(a * 0.6)), stroke=3))
+    for i, ang in enumerate((-160, -130, -100, -80, -50, -20)):
+        sw = math.sin(t * 1.2 + i) * 4
+        ar = math.radians(ang + sw); L = 230
+        ex, ey = math.cos(ar) * L, -180 + math.sin(ar) * L * 0.8
+        mx, my = math.cos(ar) * L * 0.5, -180 + math.sin(ar) * L * 0.8 - 70
+        fp = skia.Path(); fp.moveTo(0, -180); fp.quadTo(mx, my, ex, ey)
+        c.drawPath(fp, P(color=col('#3f8f2e', a), stroke=8))
+        meas = skia.PathMeasure(fp, False); LL = meas.getLength()
+        for j in range(1, 12):
+            pos, tan = meas.getPosTan(LL * j / 12)
+            if pos is None: continue
+            (qx, qy), (tx, ty) = pos, tan
+            for sd in (-1, 1):
+                ll = 44 * (1 - j / 14)
+                c.drawLine(qx, qy, qx - ty * sd * ll + tx * ll * 0.6, qy + tx * sd * ll + ty * ll * 0.6 + ll * 0.3, P(color=col('#5cc94a', a), stroke=7))
+    c.restore()
+
+def cochlea_path(cx, cy, r0=110, turns=2.6, r1=18, steps=120):
+    p = skia.Path()
+    for i in range(steps + 1):
+        u = i / steps; a = math.pi * 0.95 + u * turns * 2 * math.pi; r = lerp(r0, r1, u)
+        x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+        (p.moveTo if i == 0 else p.lineTo)(x, y)
+    return p
+
+def stirrup(c, x, y, s=1.0, rot=0.0, alpha=255, fill='#fffaf0', edge='#b08a5a'):
+    """Stapes (stirrup bone): head at left, two arches, footplate at right. (x, y) = centre; ~150*s long."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    outer = skia.Path(); outer.moveTo(-75, 0); outer.cubicTo(-40, -50, 40, -58, 62, -46); outer.lineTo(62, 46); outer.cubicTo(40, 58, -40, 50, -75, 0); outer.close()
+    inner = skia.Path(); inner.moveTo(-48, 0); inner.cubicTo(-24, -30, 30, -36, 50, -30); inner.lineTo(50, 30); inner.cubicTo(30, 36, -24, 30, -48, 0); inner.close()
+    ring = skia.Op(outer, inner, skia.PathOp.kDifference_PathOp)
+    c.drawPath(ring, lin(c, (0, -58, 0, 58), [col(fill, a), col('#efe0c4', a)]))
+    c.drawPath(ring, P(color=col(edge, a), stroke=3.5))
+    c.drawRoundRect(skia.Rect(56, -62, 76, 62), 8, 8, P(color=col(fill, a)))
+    c.drawRoundRect(skia.Rect(56, -62, 76, 62), 8, 8, P(color=col(edge, a), stroke=3.5))
+    c.drawCircle(-80, 0, 14, P(color=col(fill, a))); c.drawCircle(-80, 0, 14, P(color=col(edge, a), stroke=3.5))
+    c.restore()
+
+def ear_section(c, ox, oy, s, t, drum=0.0, bones=0.0, fluid=0.0, nerve=0.0, hi=None, alpha=255):
+    """Cross-section of the ear, ~1000 x 700 units at s=1, (ox, oy) = left-middle. drum/bones/fluid 0..1 = vibration
+    amount of eardrum / ossicles / cochlea fluid; nerve 0..1 = signal pulses along the hearing nerve.
+    hi: optional set of part names to highlight ('pinna', 'canal', 'drum', 'bones', 'cochlea', 'nerve')."""
+    a = int(alpha); hi = hi or set()
+    c.save(); c.translate(ox, oy); c.scale(s, s)
+    # head tissue
+    head = skia.Path(); head.moveTo(170, -340); head.lineTo(940, -340); head.quadTo(1010, -340, 1010, -270); head.lineTo(1010, 270); head.quadTo(1010, 340, 940, 340); head.lineTo(170, 340)
+    head.cubicTo(200, 200, 200, -200, 170, -340); head.close()
+    c.drawPath(head, lin(c, (170, 0, 1010, 0), [col('#f6cdb0', a), col('#f2c09f', a)], vertical=False))
+    # skull bone region around middle/inner ear
+    c.drawRoundRect(skia.Rect(500, -250, 1010, 250), 120, 120, P(color=col('#f3e7d3', a)))
+    # pinna
+    pin = skia.Path(); pin.moveTo(190, -310); pin.cubicTo(60, -330, -10, -160, 30, -40)
+    pin.cubicTo(50, 40, 110, 70, 120, 150); pin.cubicTo(128, 230, 160, 300, 200, 290); pin.lineTo(200, -310); pin.close()
+    c.drawPath(pin, lin(c, (0, 0, 200, 0), [col('#f0b08a', a), col('#f6c6a4', a)], vertical=False))
+    fold = skia.Path(); fold.moveTo(170, -250); fold.cubicTo(90, -250, 60, -140, 90, -60)
+    c.drawPath(fold, P(color=col('#d98d6a', int(a * 0.8)), stroke=10))
+    if 'pinna' in hi: c.drawPath(pin, P(color=col('#ffd23f', a), stroke=8))
+    # ear canal
+    can = skia.Path(); can.moveTo(150, -46); can.cubicTo(300, -60, 420, -30, 520, -40); can.lineTo(520, 40)
+    can.cubicTo(420, 34, 300, 60, 150, 46); can.close()
+    c.drawPath(can, P(color=col('#fff2e6', a)))
+    c.drawPath(can, P(color=col('#c98a6b', a), stroke=4))
+    if 'canal' in hi: c.drawPath(can, P(color=col('#ffd23f', a), stroke=8))
+    # middle ear cavity
+    c.drawOval(skia.Rect(520, -150, 740, 130), P(color=col('#fff8ee', a)))
+    c.drawOval(skia.Rect(520, -150, 740, 130), P(color=col('#d8c3a0', a), stroke=3))
+    # eardrum
+    bulge = drum * 10 * math.sin(t * 40)
+    dp = skia.Path(); dp.moveTo(522, -62); dp.quadTo(530 + bulge * 2, 0, 522, 62)
+    c.drawPath(dp, P(color=col('#ff7f9a', a), stroke=9))
+    if 'drum' in hi: c.drawCircle(526, 0, 80, rad(526, 0, 80, [col('#ffd23f', int(a * 0.6)), col('#ffd23f', 0)]))
+    # ossicles
+    rock = bones * 4 * math.sin(t * 40)
+    bf, be = '#fffaf0', '#b08a5a'
+    c.save(); c.translate(560, -110); c.rotate(rock)
+    mal = skia.Path(); mal.addCircle(0, 0, 22); mal.moveTo(-8, 10); mal.lineTo(-30, 100); mal.lineTo(-20, 104); mal.lineTo(10, 14); mal.close()
+    c.drawPath(mal, P(color=col(bf, a))); c.drawPath(mal, P(color=col(be, a), stroke=3))
+    c.restore()
+    c.save(); c.translate(600, -100); c.rotate(-rock)
+    inc = skia.Path(); inc.addOval(skia.Rect(-20, -24, 26, 22)); inc.moveTo(4, 14); inc.lineTo(20, 80); inc.lineTo(32, 76); inc.lineTo(20, 10); inc.close()
+    c.drawPath(inc, P(color=col(bf, a))); c.drawPath(inc, P(color=col(be, a), stroke=3))
+    c.restore()
+    stirrup(c, 668 + rock * 1.5, -6, 0.42, rot=10, alpha=a)
+    if 'bones' in hi: c.drawCircle(610, -60, 120, rad(610, -60, 120, [col('#ffd23f', int(a * 0.55)), col('#ffd23f', 0)]))
+    # semicircular canals
+    for i, (cx, cy, r) in enumerate(((760, -150, 50), (810, -170, 44), (850, -130, 40))):
+        c.drawCircle(cx, cy, r, P(color=col('#a8dcff', int(a * 0.9)), stroke=16))
+        c.drawCircle(cx, cy, r, P(color=col('#5a9fd6', int(a * 0.6)), stroke=2))
+    # cochlea
+    cp = cochlea_path(840, 40)
+    c.drawPath(cp, P(color=col('#5a9fd6', a), stroke=40))
+    c.drawPath(cp, P(color=col('#a8e0ff', a), stroke=32))
+    if fluid > 0:
+        meas = skia.PathMeasure(cp, False); L = meas.getLength()
+        for j in range(18):
+            u = ((t * 0.5 + j / 18) % 1.0)
+            pos, _ = meas.getPosTan(L * u)
+            if pos is None: continue
+            rr = 6 + 4 * math.sin(t * 12 + j); px_, py_ = pos
+            c.drawCircle(px_, py_, rr, P(color=col('#ffffff', int(a * fluid * 0.9))))
+    if 'cochlea' in hi: c.drawCircle(840, 40, 170, rad(840, 40, 170, [col('#ffd23f', int(a * 0.5)), col('#ffd23f', 0)]))
+    # hearing nerve
+    np_ = skia.Path(); np_.moveTo(860, 40); np_.cubicTo(920, 60, 960, 120, 1010, 130)
+    c.drawPath(np_, P(color=col('#ffd23f', a), stroke=18)); c.drawPath(np_, P(color=col('#e0a800', a), stroke=4))
+    if nerve > 0:
+        meas = skia.PathMeasure(np_, False); L = meas.getLength()
+        for j in range(3):
+            u = ((t * 1.2 + j / 3) % 1.0); pos, _ = meas.getPosTan(L * u)
+            if pos is not None:
+                px_, py_ = pos
+                c.drawCircle(px_, py_, 16, rad(px_, py_, 16, [col('#ffffff', int(a * nerve)), col('#fff36b', 0)]))
+    c.restore()

@@ -36,10 +36,10 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why are bubbles round? → ep_031_why_are_bubbles_round
 - [x] How do bats find their way in the dark? → ep_032_how_do_bats_find_their_way_in_the_dark
 - [x] How do earthquakes happen? → ep_033_how_do_earthquakes_happen
-- [ ] Why can we sometimes see the Moon during the day?
-- [ ] Why don't penguins freeze?
-- [ ] How does a seed grow into a plant?
-- [ ] How does sound get to your ears?
+- [x] Why can we sometimes see the Moon during the day? → ep_034_why_can_we_see_the_moon_during_the_day
+- [x] Why don't penguins freeze? → ep_035_why_dont_penguins_freeze
+- [x] How does a seed grow into a plant? → ep_036_how_does_a_seed_grow_into_a_plant
+- [x] How does sound get to your ears? → ep_037_how_does_sound_get_to_your_ears
 - [ ] Why do things fall down?
 - [ ] How do whales breathe?
 - [ ] How can owls turn their heads so far?

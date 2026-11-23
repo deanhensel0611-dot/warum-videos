@@ -43,9 +43,12 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 - 2026-11-21 (n=11 TikTok – still no new posts since 11-19; YouTube n=11 Shorts, caterpillar + fish newly in the data): YouTube retention stays in the 47–56 % band (caterpillar 51.5 %, fish 53.7 % but only 10 views, caterpillar 63 views). View counts keep splitting by age/pickup: bees 1,263, leaves 1,562, ocean 1,185 vs. ≤251 for everything newer. Thunder Short now 37 % avg. view % (still lowest), rainbow still 1 view. ep_017–025 (E1 cold open) are still in neither data set → E1 0/9 measured.
 - TikTok numbers barely moved (+0–24 views per video); the account has had no new TikTok post since 11-19, so TikTok can't tell us anything about the new format or E1 until Dean posts again.
 
+- 2026-11-23 (n=11 TikTok – still no new TikTok posts since 11-19; YouTube n=11 Shorts in Windsor, unchanged set): per-video TikTok views are readable again (caterpillar 391, seasons 435, fish 361, ice 321, leaves 311, thunder 293 vs. 68–78 for the 5 #kidslearning posts); avg. watch leaders unchanged (leaves 20.5 s, caterpillar 19.0 s). YouTube retention 47–55 % on 10 of 11 Shorts; caterpillar keeps climbing (151 → 191 views). The Metricool-scheduled Shorts (ep_030–033, published 11-22/23) and ep_014–029 are not in the Windsor YouTube data yet → E1 still 0 measured.
+
 - 2026-11-22 (n=11 TikTok – no new posts since 11-19; YouTube n=11 Shorts, unchanged set): YouTube retention still 47–55 % (ice 55.1 %, rain 54.8 %, caterpillar 53.3 %, seasons 53.7 %); caterpillar grew 63 → 151 views, ice 326, seasons 198 – the older winners (leaves 1,567, bees 1,266, ocean 1,186) barely move. TikTok per-video view counts now come back as 0 from Windsor (only the account total, 3,528, is filled) – avg. watch time still works (leaves 20.5 s, caterpillar 19.2 s). ep_017–029 (E1) still in neither data set → E1 0/13 measured.
 
 ## Change history
+- 2026-11-23: No style change (E1 still 0 measured). E1 cold open continued on ep_034–037. New lib props: day_moon (pale daytime moon, lit part only), gray_moon (true-colour dark moon), penguin (plain emperor, 3/4 view), penguin_top (huddle view), bean_path/bean_seed (with cut-away, swell, crack), seedling (root with gravitropic turn, hooked shoot, unfolding leaves), palm_sapling, cochlea_path, stirrup, ear_section (outer/middle/inner ear cross-section with vibrating drum, ossicles, cochlea fluid, nerve pulses).
 - 2026-11-22: No style change (E1 still 0 measured). E1 cold open continued on ep_030–033. New lib props: elephant (plain icon), updraft (rising chevrons), moth (plain top view), echo_map (sonar-dot outline).
 - 2026-11-21: No style change (E1 still 0 measured; ep_017–025 not in the data). E1 cold open continued on ep_026–029 (ep_029 added the same day as 4th video – Dean switched to 4 videos per day, posted 08:30/13:00/17:00/20:30 New York). New lib props: tooth (plain molar with plaque/tartar/cavity/cut-away), toothbrush, bacterium (plain), acid_drop, cliff, megaphone, stopwatch, bat (plain), ball, chameleon (plain, natural turret eye, colour via cham_color), crystal_color, branch, crystal_lattice, soap_bubble, feather, spider (plain top view), orb_web (frame, dry spokes, sticky spiral with glue drops, anchors).
 - 2026-11-20: No style change (E1 still 0 measured videos – ep_017–022 are not in the TikTok/YouTube data yet). E1 cold open continued on ep_023–025. New lib props: flag (fixed droop geometry), wind_lines, thermometer, air_dots, bar_magnet (MAG_N/MAG_S colours), paperclip, compass, field_lines, spin_electron, domains, heart (plain infographic heart with 4-chamber cut-away, valves, electrical wave).
@@ -55,6 +58,13 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-23** (data: 11 TikToks + 11 YouTube Shorts, last 14 days via Windsor.ai)
+- Worked: YouTube retention steady at 47–55 % avg. view % on 10 of 11 Shorts; caterpillar still growing (191 views, was 151), ice 327 / 55 %.
+- TikTok: per-video views readable again – general-caption posts 293–435 views vs. 68–78 for #kidslearning; leaves (20.5 s) and caterpillar (19.0 s) lead avg. watch. No new TikTok posts since 11-19.
+- Didn't work: thunder Short (37 %, 8 views); rainbow Short still 1 view (setting/visibility, not style).
+- Change today: none – E1 (cold open) 0/21 measured; ep_017–033 aren't in the Windsor data yet (even the Metricool-published ep_030–033). Continued E1 on ep_034–037.
+- Uncertain: pacing, transitions, sound, posting time. Needs the new Shorts in Windsor (≥48 h) and new TikTok posts.
 
 **2026-11-22** (data: 11 TikToks + 11 YouTube Shorts, last 14 days via Windsor.ai)
 - Worked: YouTube retention steady at 47–55 % avg. view % on 10 of 11 Shorts; caterpillar is climbing (151 views, was 63), ice 326 views / 55 %.
