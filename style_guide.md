@@ -47,7 +47,10 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 - 2026-11-22 (n=11 TikTok – no new posts since 11-19; YouTube n=11 Shorts, unchanged set): YouTube retention still 47–55 % (ice 55.1 %, rain 54.8 %, caterpillar 53.3 %, seasons 53.7 %); caterpillar grew 63 → 151 views, ice 326, seasons 198 – the older winners (leaves 1,567, bees 1,266, ocean 1,186) barely move. TikTok per-video view counts now come back as 0 from Windsor (only the account total, 3,528, is filled) – avg. watch time still works (leaves 20.5 s, caterpillar 19.2 s). ep_017–029 (E1) still in neither data set → E1 0/13 measured.
 
+- 2026-11-24 (n=16 TikTok – 5 new posts on 11-23/24, first since 11-19; YouTube n=11 Shorts in Windsor, unchanged set): first E1 (cold open) videos measured on TikTok – airplanes (ep_017) 453 views / 9.0 s avg. watch (12 % of 74.6 s), plants (ep_020, <24 h old) 25 views / 7.6 s. That is inside the range of the non-E1 general-caption posts (7.6–20.4 s) → no effect visible yet (n=2, **uncertain**). Older non-E1 episodes posted the same day: volcano 315 / 11.6 s, sun 57 / 18.3 s, stars 53 / 7.6 s. Airplanes got the most views of any TikTok so far, but it is also the longest video (74.6 s) and has the lowest watch share – keep an eye on length.
+
 ## Change history
+- 2026-11-24: No style change (E1 now 2 measured on TikTok, no clear effect yet). E1 cold open continued on ep_038–041. New lib props: apple, hammer, quill (plain white feather), whale (plain blue whale, side view, swim/flukes) + whale_hole + whale_blow (misty V-spout), lungs (fill level), owl (plain, perched, head yaw 0–360° incl. back of head), owl_eye_section (tubular eye + sclerotic ring), vertebra_chain, space_rock, meteor (glowing streak), comet, brain (per-hemisphere awake/asleep). rad()/P() now tolerate zero radius/blur.
 - 2026-11-23: No style change (E1 still 0 measured). E1 cold open continued on ep_034–037. New lib props: day_moon (pale daytime moon, lit part only), gray_moon (true-colour dark moon), penguin (plain emperor, 3/4 view), penguin_top (huddle view), bean_path/bean_seed (with cut-away, swell, crack), seedling (root with gravitropic turn, hooked shoot, unfolding leaves), palm_sapling, cochlea_path, stirrup, ear_section (outer/middle/inner ear cross-section with vibrating drum, ossicles, cochlea fluid, nerve pulses).
 - 2026-11-22: No style change (E1 still 0 measured). E1 cold open continued on ep_030–033. New lib props: elephant (plain icon), updraft (rising chevrons), moth (plain top view), echo_map (sonar-dot outline).
 - 2026-11-21: No style change (E1 still 0 measured; ep_017–025 not in the data). E1 cold open continued on ep_026–029 (ep_029 added the same day as 4th video – Dean switched to 4 videos per day, posted 08:30/13:00/17:00/20:30 New York). New lib props: tooth (plain molar with plaque/tartar/cavity/cut-away), toothbrush, bacterium (plain), acid_drop, cliff, megaphone, stopwatch, bat (plain), ball, chameleon (plain, natural turret eye, colour via cham_color), crystal_color, branch, crystal_lattice, soap_bubble, feather, spider (plain top view), orb_web (frame, dry spokes, sticky spiral with glue drops, anchors).
@@ -58,6 +61,14 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-24** (data: 16 TikToks + 11 YouTube Shorts, last 14 days via Windsor.ai)
+- New: Dean posted 5 TikToks on 11-23/24 (first since 11-19) – airplanes 453 views (best TikTok so far), volcano 315, sun 57, stars 53, plants 25 (<24 h).
+- E1 (cold open) first data: airplanes 9.0 s and plants 7.6 s avg. watch – inside the 7.6–20.4 s range of non-E1 posts → no effect visible yet (n=2, uncertain).
+- Worked: YouTube retention steady at 47–55 % avg. view %; leaves 1,567, bees 1,269, ocean 1,186 views lead.
+- Didn't work: thunder Short (37 %, 8 views); rainbow Short still 1 view; airplanes on TikTok is the longest (74.6 s) and has the lowest watch share (12 %).
+- Change today: none. E1 continues on ep_038–041 (all 77–84 s – longer than the 60–75 s target, watch this).
+- Uncertain: pacing, transitions, sound, posting time; newer Shorts (ep_014+) are still missing from the Windsor YouTube data.
 
 **2026-11-23** (data: 11 TikToks + 11 YouTube Shorts, last 14 days via Windsor.ai)
 - Worked: YouTube retention steady at 47–55 % avg. view % on 10 of 11 Shorts; caterpillar still growing (191 views, was 151), ice 327 / 55 %.

@@ -42,7 +42,7 @@ def P(**kw):
     if kw.get('stroke'):
         p.setStyle(skia.Paint.kStroke_Style); p.setStrokeWidth(kw['stroke'])
         p.setStrokeCap(skia.Paint.kRound_Cap); p.setStrokeJoin(skia.Paint.kRound_Join)
-    if kw.get('blur'):
+    if kw.get('blur') and kw['blur'] > 0.01:
         p.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, kw['blur']))
     return p
 
@@ -54,6 +54,7 @@ def lin(c, rect, cols, vertical=True, pos=None):
     return p
 
 def rad(cx, cy, r, cols, pos=None):
+    r = max(r, 0.01)
     p = skia.Paint(AntiAlias=True); p.setShader(skia.GradientShader.MakeRadial(center=(cx, cy), radius=r, colors=cols, positions=pos))
     return p
 
@@ -2779,4 +2780,313 @@ def ear_section(c, ox, oy, s, t, drum=0.0, bones=0.0, fluid=0.0, nerve=0.0, hi=N
             if pos is not None:
                 px_, py_ = pos
                 c.drawCircle(px_, py_, 16, rad(px_, py_, 16, [col('#ffffff', int(a * nerve)), col('#fff36b', 0)]))
+    c.restore()
+
+# ---------------- props added 2026-11-24 (gravity, whales, owls, meteors) ----------------
+def apple(c, x, y, r, rot=0.0, alpha=255):
+    """Plain red apple, (x, y) = centre, radius r."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot)
+    p = skia.Path(); p.moveTo(0, -r * 0.72)
+    p.cubicTo(r * 0.45, -r * 1.05, r * 1.08, -r * 0.75, r * 1.0, -r * 0.05)
+    p.cubicTo(r * 0.95, r * 0.6, r * 0.55, r * 1.0, r * 0.2, r * 0.95)
+    p.cubicTo(r * 0.08, r * 0.92, -r * 0.08, r * 0.92, -r * 0.2, r * 0.95)
+    p.cubicTo(-r * 0.55, r * 1.0, -r * 0.95, r * 0.6, -r * 1.0, -r * 0.05)
+    p.cubicTo(-r * 1.08, -r * 0.75, -r * 0.45, -r * 1.05, 0, -r * 0.72); p.close()
+    c.drawPath(p, rad(-r * 0.35, -r * 0.35, r * 1.5, [col('#ff8a8a', a), col('#e8323c', a), col('#a8172a', a)], [0, 0.5, 1]))
+    c.drawOval(skia.Rect(-r * 0.6, -r * 0.55, -r * 0.25, -r * 0.1), P(color=col('#ffffff', int(a * 0.45)), blur=r * 0.05))
+    c.drawLine(0, -r * 0.7, r * 0.1, -r * 1.12, P(color=col('#6e4a2c', a), stroke=r * 0.1))
+    lp = skia.Path(); lp.moveTo(r * 0.08, -r * 0.98); lp.cubicTo(r * 0.3, -r * 1.3, r * 0.65, -r * 1.2, r * 0.7, -r * 1.05)
+    lp.cubicTo(r * 0.5, -r * 0.92, r * 0.25, -r * 0.92, r * 0.08, -r * 0.98); lp.close()
+    c.drawPath(lp, lin(c, (0, -r * 1.25, 0, -r * 0.9), [col('#7ed957', a), col('#3f9e3a', a)]))
+    c.restore()
+
+def hammer(c, x, y, s=1.0, rot=0.0, alpha=255):
+    """Geologist's hammer, (x, y) = centre of mass (near the head). Length ~ 330*s."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(-14, -40, 14, 260), 12, 12, lin(c, (-14, 0, 14, 0), [col('#e8b77a', a), col('#b77f45', a)], vertical=False))
+    c.drawRoundRect(skia.Rect(-16, 190, 16, 262), 12, 12, P(color=col('#1b2a4a', a)))
+    hp = skia.Path(); hp.moveTo(-60, -62); hp.lineTo(30, -62); hp.lineTo(120, -40); hp.lineTo(120, -30); hp.lineTo(30, -22)
+    hp.lineTo(-60, -22); hp.close()
+    c.drawPath(hp, lin(c, (0, -62, 0, -22), [col('#e3e8f0', a), col('#9aa6b8', a), col('#6f7c90', a)], pos=[0, 0.5, 1]))
+    c.drawRoundRect(skia.Rect(-72, -66, -40, -18), 6, 6, lin(c, (0, -66, 0, -18), [col('#d6dde8', a), col('#7d8aa0', a)]))
+    c.drawPath(hp, P(color=col('#4a5568', int(a * 0.7)), stroke=2.5))
+    c.restore()
+
+def quill(c, x, y, s=1.0, rot=0.0, t=0.0, alpha=255, colr='#ffffff', edge='#b9c6d8'):
+    """Plain white bird feather (falcon-style), (x, y) = centre, length ~ 300*s."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    v = skia.Path(); v.moveTo(0, -150)
+    v.cubicTo(40, -120, 52, -20, 40, 60); v.cubicTo(32, 100, 14, 120, 4, 120)
+    v.lineTo(-4, 120); v.cubicTo(-30, 100, -44, 40, -40, -40); v.cubicTo(-36, -100, -18, -140, 0, -150); v.close()
+    c.drawPath(v, lin(c, (-44, 0, 52, 0), [col('#e9eef6', a), col(colr, a), col('#dfe6f0', a)], vertical=False, pos=[0, 0.5, 1]))
+    for i in range(9):
+        yy = -110 + i * 24
+        c.drawLine(0, yy + 8, 38 - abs(i - 4) * 2, yy - 10, P(color=col(edge, int(a * 0.55)), stroke=2))
+        c.drawLine(0, yy + 8, -34 + abs(i - 4) * 2, yy - 10, P(color=col(edge, int(a * 0.55)), stroke=2))
+    for (yy, side) in ((-30, 1), (40, -1)):
+        nk = skia.Path(); nk.moveTo(side * 44, yy); nk.lineTo(side * 26, yy + 8); nk.lineTo(side * 42, yy + 14)
+        c.drawPath(nk, P(color=col('#cfd8e6', a), stroke=3))
+    c.drawPath(v, P(color=col(edge, a), stroke=2.5))
+    c.drawLine(0, -146, 0, 165, P(color=col('#c9b27a', a), stroke=5))
+    c.restore()
+
+def whale_blow(c, x, y, s, k, t=0.0, alpha=255):
+    """Misty V-shaped spout rising from (x, y). k 0..1 = life of the blow (rises, spreads, fades)."""
+    if k <= 0 or k >= 1: return
+    a = alpha * (1 - k) ** 0.7 * min(1, k * 8)
+    h = 380 * s * ease_out(min(1, k * 1.6))
+    rnd = random.Random(5)
+    for side in (-1, 1):
+        for i in range(14):
+            u = i / 13
+            px = x + side * (30 + 120 * u) * s * (0.4 + 0.6 * k) + rnd.uniform(-10, 10) * s
+            py = y - h * u - 10 * s
+            rr = (26 + 70 * u) * s * (0.6 + 0.6 * k)
+            c.drawCircle(px, py, rr, P(color=col('#ffffff', int(a * (0.85 - 0.45 * u))), blur=rr * 0.4))
+    for i in range(10):
+        dx = rnd.uniform(-160, 160) * s * k; dy = -h * rnd.uniform(0.3, 1.1) + 200 * s * k * k
+        c.drawCircle(x + dx, y + dy, 5 * s, P(color=col('#d8f0ff', int(a * 0.8))))
+
+def whale(c, x, y, s, t, alpha=255, flip=False, swim=1.0, mouth=0.0, eye=True, colr='#2f5d8f', belly='#d6e6f2'):
+    """Plain blue whale, side view facing right (flip faces left). (x, y) = body centre; length ~ 900*s.
+    Blowhole (local) at (190, -96) -> use whale_hole(x, y, s, flip) for screen position."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(-s if flip else s, s)
+    bob = math.sin(t * 1.8) * swim
+    # flukes (behind the body)
+    c.save(); c.translate(-420, 0); c.rotate(10 * bob)
+    fl = skia.Path(); fl.moveTo(10, -6); fl.cubicTo(-40, -20, -90, -80, -130, -78); fl.cubicTo(-110, -50, -95, -18, -70, 0)
+    fl.cubicTo(-95, 18, -110, 50, -130, 78); fl.cubicTo(-90, 80, -40, 20, 10, 6); fl.close()
+    c.drawPath(fl, lin(c, (0, -80, 0, 80), [col(mix_hx(colr, '#000000', 0.15), a), col(colr, a), col(mix_hx(colr, '#000000', 0.25), a)]))
+    c.restore()
+    body = skia.Path(); body.moveTo(455, 12)
+    body.cubicTo(440, -58, 320, -98, 160, -98); body.cubicTo(0, -98, -220, -70, -340, -28)
+    body.cubicTo(-380, -14, -410, -10, -425, -7 + 6 * bob); body.lineTo(-425, 7 + 6 * bob)
+    body.cubicTo(-380, 18, -300, 40, -120, 78); body.cubicTo(60, 98, 320, 96, 455, 12); body.close()
+    c.drawPath(body, lin(c, (0, -100, 0, 100), [col(mix_hx(colr, '#000000', 0.12), a), col(colr, a), col(mix_hx(colr, belly, 0.55), a), col(belly, a)], pos=[0, 0.35, 0.68, 1]))
+    # mottled skin
+    rnd = random.Random(11)
+    for i in range(26):
+        mx, my = rnd.uniform(-300, 380), rnd.uniform(-80, 10)
+        c.drawOval(skia.Rect(mx - 9, my - 5, mx + 9, my + 5), P(color=col('#ffffff', int(a * 0.10))))
+    # throat pleats
+    c.save(); c.clipPath(body, doAntiAlias=True)
+    for i in range(7):
+        yy = 40 + i * 9
+        pl = skia.Path(); pl.moveTo(430, 22 + i * 6); pl.cubicTo(320, yy + 8, 160, yy + 22, 20, yy + 26)
+        c.drawPath(pl, P(color=col(mix_hx(belly, colr, 0.45), int(a * 0.7)), stroke=2.5))
+    c.restore()
+    # mouth line
+    m = skia.Path(); m.moveTo(452, 14); m.cubicTo(400, 22 + 20 * mouth, 300, 28 + 20 * mouth, 225, 24)
+    c.drawPath(m, P(color=col('#14294a', a), stroke=4))
+    # dorsal fin
+    df = skia.Path(); df.moveTo(-230, -62); df.cubicTo(-245, -82, -262, -96, -290, -100); df.cubicTo(-280, -80, -280, -60, -290, -48); df.close()
+    c.drawPath(df, P(color=col(mix_hx(colr, '#000000', 0.12), a)))
+    # flipper
+    c.save(); c.translate(150, 58); c.rotate(14 + 6 * math.sin(t * 1.8 + 1) * swim)
+    fp = skia.Path(); fp.moveTo(0, -8); fp.cubicTo(-30, 20, -110, 60, -150, 70); fp.cubicTo(-110, 40, -50, 10, 0, 10); fp.close()
+    c.drawPath(fp, lin(c, (0, -8, 0, 70), [col(colr, a), col(mix_hx(colr, '#000000', 0.25), a)]))
+    c.restore()
+    # blowhole splash guard + nostrils
+    c.drawOval(skia.Rect(170, -104, 210, -92), P(color=col(mix_hx(colr, '#000000', 0.3), a)))
+    if eye:
+        c.drawCircle(250, 30, 7, P(color=col('#0b1426', a)))
+        c.drawCircle(252, 28, 2.2, P(color=col('#ffffff', int(a * 0.7))))
+    c.drawPath(body, P(color=col('#14294a', int(a * 0.35)), stroke=3))
+    c.restore()
+
+def whale_hole(x, y, s, flip=False):
+    return (x + (-190 if flip else 190) * s, y - 98 * s)
+
+def lungs(c, x, y, s, fill=1.0, alpha=255, air='#2f9bff', fresh=None):
+    """Simple pair of lungs (infographic). fill 0..1 = how much is filled with fresh air (from bottom)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    c.drawLine(0, -170, 0, -90, P(color=col('#c9d3e0', a), stroke=22))
+    for side in (-1, 1):
+        c.drawLine(0, -95, side * 50, -60, P(color=col('#c9d3e0', a), stroke=16))
+        p = skia.Path(); p.moveTo(side * 22, -110)
+        p.cubicTo(side * 120, -130, side * 160, -20, side * 150, 90); p.cubicTo(side * 145, 140, side * 60, 150, side * 25, 120)
+        p.cubicTo(side * 15, 40, side * 18, -40, side * 22, -110); p.close()
+        c.drawPath(p, lin(c, (0, -130, 0, 150), [col('#ffd0dc', a), col('#f49ab2', a)]))
+        if fill > 0:
+            c.save(); c.clipPath(p, doAntiAlias=True)
+            top = lerp(150, -135, fill)
+            c.drawRect(skia.Rect(-170, top, 170, 160), P(color=col(fresh or air, int(a * 0.55))))
+            c.restore()
+        c.drawPath(p, P(color=col('#c0607a', a), stroke=5))
+    c.restore()
+
+def owl(c, x, y, s, t, yaw=0.0, alpha=255, blink=True, body='#a8774a', face='#f3e6cc', eyes='#ffc21f'):
+    """Plain owl perched, front view. (x, y) = feet. Height ~ 560*s. yaw = head turn in degrees (0 = facing viewer,
+    90 = profile to the right, 180 = back of head, 270 = profile to the left); the body stays put."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    dark = mix_hx(body, '#000000', 0.3); light = mix_hx(body, '#ffffff', 0.35)
+    # tail
+    tp = skia.Path(); tp.moveTo(-50, -40); tp.lineTo(50, -40); tp.lineTo(36, 40); tp.lineTo(-36, 40); tp.close()
+    c.drawPath(tp, P(color=col(dark, a)))
+    # body
+    bp = skia.Path(); bp.moveTo(0, -330); bp.cubicTo(150, -330, 175, -150, 150, -60); bp.cubicTo(130, 10, -130, 10, -150, -60)
+    bp.cubicTo(-175, -150, -150, -330, 0, -330); bp.close()
+    c.drawPath(bp, lin(c, (0, -330, 0, 0), [col(body, a), col(mix_hx(body, '#000000', 0.12), a)]))
+    chest = skia.Path(); chest.moveTo(0, -290); chest.cubicTo(95, -285, 110, -140, 92, -70); chest.cubicTo(70, -20, -70, -20, -92, -70)
+    chest.cubicTo(-110, -140, -95, -285, 0, -290); chest.close()
+    c.drawPath(chest, lin(c, (0, -290, 0, -20), [col(face, a), col(mix_hx(face, body, 0.25), a)]))
+    c.save(); c.clipPath(chest, doAntiAlias=True)
+    for r_ in range(6):
+        for k in range(5):
+            cx = -80 + k * 40 + (20 if r_ % 2 else 0); cy = -250 + r_ * 36
+            v = skia.Path(); v.moveTo(cx - 10, cy - 4); v.lineTo(cx, cy + 6); v.lineTo(cx + 10, cy - 4)
+            c.drawPath(v, P(color=col(dark, int(a * 0.7)), stroke=4))
+    c.restore()
+    # folded wings
+    for side in (-1, 1):
+        wp = skia.Path(); wp.moveTo(side * 120, -280); wp.cubicTo(side * 185, -230, side * 185, -90, side * 120, -10)
+        wp.cubicTo(side * 105, -60, side * 100, -200, side * 120, -280); wp.close()
+        c.drawPath(wp, lin(c, (0, -280, 0, -10), [col(mix_hx(body, '#000000', 0.08), a), col(dark, a)]))
+        for i in range(4):
+            yy = -200 + i * 45
+            c.drawLine(side * 125, yy, side * 165, yy + 20, P(color=col(light, int(a * 0.6)), stroke=4))
+    # feet
+    for fx in (-40, 40):
+        for d in (-14, 0, 14):
+            c.drawLine(fx, -14, fx + d, 8, P(color=col('#6b5a3a', a), stroke=9))
+    # head
+    hy, R = -390, 150
+    ya = math.radians(yaw); sy, cy_ = math.sin(ya), math.cos(ya)
+    head = skia.Path(); head.addOval(skia.Rect(-R * 1.05, hy - R, R * 1.05, hy + R * 0.95))
+    c.drawPath(head, rad(-30, hy - 60, R * 1.6, [col(mix_hx(body, '#ffffff', 0.12), a), col(body, a), col(dark, a)], [0, 0.6, 1]))
+    c.save(); c.clipPath(head, doAntiAlias=True)
+    # back-of-head speckles shift with the turn
+    rnd = random.Random(3)
+    for i in range(40):
+        ang = rnd.uniform(0, 2 * math.pi); ry = rnd.uniform(-0.85, 0.85)
+        ca = math.cos(ang + ya)
+        if ca > 0.15: continue  # on the visible back half only
+        sx_ = math.sin(ang + ya) * R * math.sqrt(1 - ry * ry)
+        c.drawOval(skia.Rect(sx_ - 6, hy + ry * R - 3, sx_ + 6, hy + ry * R + 3), P(color=col(light, int(a * 0.5 * min(1, -ca * 3 + 0.5)))))
+    if cy_ > 0.02:
+        k = cy_
+        dx = sy * R * 0.62
+        c.save(); c.translate(dx, hy + 10); c.scale(max(0.05, k), 1)
+        disc = skia.Path(); disc.moveTo(0, -95)
+        disc.cubicTo(70, -140, 140, -80, 125, 0); disc.cubicTo(110, 90, 40, 115, 0, 120)
+        disc.cubicTo(-40, 115, -110, 90, -125, 0); disc.cubicTo(-140, -80, -70, -140, 0, -95); disc.close()
+        c.drawPath(disc, rad(0, 0, 150, [col(face, a), col(mix_hx(face, body, 0.3), a)], [0.6, 1]))
+        c.drawPath(disc, P(color=col(dark, int(a * 0.6)), stroke=5))
+        bl = 1.0
+        if blink:
+            ph = (t + 0.7) % 4.3
+            if ph < 0.14: bl = max(0.08, abs(ph - 0.07) / 0.07)
+        for ex in (-55, 55):
+            c.drawCircle(ex, -10, 40, P(color=col(mix_hx(face, dark, 0.35), a)))
+            c.save(); c.translate(ex, -10); c.scale(1, bl)
+            c.drawCircle(0, 0, 33, rad(0, 0, 33, [col(eyes, a), col(mix_hx(eyes, '#d07a00', 0.6), a)], [0.5, 1]))
+            c.drawCircle(0, 0, 17, P(color=col('#0b0b10', a)))
+            c.drawCircle(-8, -9, 6, P(color=col('#ffffff', int(a * 0.85))))
+            c.restore()
+        bk = skia.Path(); bk.moveTo(-14, 30); bk.lineTo(14, 30); bk.cubicTo(10, 50, 4, 66, 0, 74); bk.cubicTo(-4, 66, -10, 50, -14, 30); bk.close()
+        c.drawPath(bk, lin(c, (0, 30, 0, 74), [col('#5a4a3a', a), col('#2e2620', a)]))
+        c.restore()
+    c.restore()
+    c.drawPath(head, P(color=col(dark, int(a * 0.5)), stroke=4))
+    c.restore()
+
+def owl_eye_section(c, x, y, s, alpha=255, label_colr='#1b2a4a'):
+    """Cross-section of an owl's tubular eye held by a ring of bone (sclerotic ring). (x, y) = centre, front faces up."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    p = skia.Path(); p.moveTo(-70, -120); p.cubicTo(-70, -175, 70, -175, 70, -120)
+    p.lineTo(80, -40); p.cubicTo(170, -20, 190, 120, 120, 180); p.cubicTo(60, 230, -60, 230, -120, 180)
+    p.cubicTo(-190, 120, -170, -20, -80, -40); p.close()
+    c.drawPath(p, rad(0, 80, 220, [col('#fff6e0', a), col('#f3dcb0', a)]))
+    c.save(); c.clipPath(p, doAntiAlias=True)
+    c.drawArc(skia.Rect(-175, -10, 175, 230), 0, 180, False, P(color=col('#ff8fa6', a), stroke=18))
+    c.restore()
+    for side in (-1, 1):
+        for i in range(5):
+            yy = -110 + i * 18
+            c.drawRoundRect(skia.Rect(side * 70 - 12 + side * i * 2, yy, side * 70 + 12 + side * i * 2, yy + 15), 4, 4, P(color=col('#e8dcc4', a)))
+            c.drawRoundRect(skia.Rect(side * 70 - 12 + side * i * 2, yy, side * 70 + 12 + side * i * 2, yy + 15), 4, 4, P(color=col('#a08a60', a), stroke=2.5))
+    c.drawOval(skia.Rect(-55, -175, 55, -120), P(color=col('#ffc21f', a)))
+    c.drawCircle(0, -125, 34, rad(-8, -132, 34, [col('#ffffff', a), col('#cfe8ff', a)]))
+    c.drawPath(p, P(color=col('#8a6a40', a), stroke=5))
+    c.restore()
+
+def vertebra_chain(c, x, y0, y1, n, t=0.0, twist=0.0, alpha=255, colr='#fff6e0', edge='#b08a5a', hi=None):
+    """Column of n vertebrae from y0 (top) to y1. twist = degrees spread over the chain (each bone turns a bit)."""
+    a = int(alpha); step = (y1 - y0) / n
+    for i in range(n):
+        yy = y0 + step * (i + 0.5); ang = twist * (n - i) / n
+        w_ = 70 * (0.75 + 0.5 * abs(math.cos(math.radians(ang))))
+        c.save(); c.translate(x, yy)
+        fill = colr if not (hi and i in hi) else '#ffd23f'
+        c.drawRoundRect(skia.Rect(-w_ / 2, -step * 0.36, w_ / 2, step * 0.36), step * 0.2, step * 0.2, lin(c, (-w_ / 2, 0, w_ / 2, 0), [col(mix_hx(fill, edge, 0.25), a), col(fill, a), col(mix_hx(fill, edge, 0.35), a)], vertical=False, pos=[0, 0.4, 1]))
+        off = math.sin(math.radians(ang)) * w_ * 0.45
+        c.drawLine(-w_ / 2 - 18 + off * 0.3, 0, w_ / 2 + 18 + off * 0.3, 0, P(color=col(mix_hx(fill, edge, 0.2), a), stroke=step * 0.16))
+        c.drawRoundRect(skia.Rect(-w_ / 2, -step * 0.36, w_ / 2, step * 0.36), step * 0.2, step * 0.2, P(color=col(edge, a), stroke=3))
+        c.restore()
+
+def space_rock(c, x, y, r, rot=0.0, seed=1, alpha=255, colr='#8d8478'):
+    """Irregular rocky meteoroid / asteroid chunk."""
+    a = int(alpha); rnd = random.Random(seed); c.save(); c.translate(x, y); c.rotate(rot)
+    n = 11; p = skia.Path()
+    pts = [(math.cos(2 * math.pi * i / n) * r * rnd.uniform(0.78, 1.05), math.sin(2 * math.pi * i / n) * r * rnd.uniform(0.78, 1.05)) for i in range(n)]
+    mids = [((pts[i][0] + pts[(i + 1) % n][0]) / 2, (pts[i][1] + pts[(i + 1) % n][1]) / 2) for i in range(n)]
+    p.moveTo(*mids[-1])
+    for i in range(n): p.quadTo(pts[i][0], pts[i][1], mids[i][0], mids[i][1])
+    p.close()
+    c.drawPath(p, rad(-r * 0.4, -r * 0.4, r * 1.7, [col(mix_hx(colr, '#ffffff', 0.35), a), col(colr, a), col(mix_hx(colr, '#000000', 0.45), a)], [0, 0.5, 1]))
+    c.save(); c.clipPath(p, doAntiAlias=True)
+    for i in range(5):
+        cx, cy, cr = rnd.uniform(-0.6, 0.6) * r, rnd.uniform(-0.6, 0.6) * r, rnd.uniform(0.08, 0.18) * r
+        c.drawCircle(cx, cy, cr, P(color=col(mix_hx(colr, '#000000', 0.3), a)))
+        c.drawArc(skia.Rect(cx - cr, cy - cr, cx + cr, cy + cr), 200, 140, False, P(color=col(mix_hx(colr, '#ffffff', 0.4), a), stroke=max(1.5, cr * 0.25)))
+    c.restore(); c.restore()
+
+def meteor(c, x, y, ang, length, r=10, alpha=255, hot='#fff6c9', tail='#ffd23f'):
+    """Glowing meteor streak; (x, y) = head, ang = direction of travel in degrees (tail points back)."""
+    if length <= 1 or alpha <= 0: return
+    a = int(alpha); rd = math.radians(ang); tx, ty = x - math.cos(rd) * length, y - math.sin(rd) * length
+    c.drawLine(tx, ty, x, y, P(color=col(tail, int(a * 0.35)), stroke=r * 3.2, blur=r * 1.2))
+    sh = skia.GradientShader.MakeLinear([skia.Point(tx, ty), skia.Point(x, y)], [col(tail, 0), col(tail, a), col(hot, a)], [0, 0.75, 1])
+    pt = skia.Paint(AntiAlias=True, Shader=sh, Style=skia.Paint.kStroke_Style, StrokeWidth=r * 1.5, StrokeCap=skia.Paint.kRound_Cap)
+    c.drawLine(tx, ty, x, y, pt)
+    c.drawCircle(x, y, r * 3.5, rad(x, y, r * 3.5, [col(hot, a), col(tail, int(a * 0.4)), col(tail, 0)], [0, 0.4, 1]))
+    c.drawCircle(x, y, r * 0.9, P(color=col('#ffffff', a)))
+
+def comet(c, x, y, s, t, tail_ang=200.0, alpha=255, dust=True):
+    """Comet: icy nucleus, glowing coma, two tails pointing to tail_ang (degrees, away from the Sun)."""
+    a = int(alpha); rd = math.radians(tail_ang)
+    for k, (L, w_, colr) in enumerate(((620, 120, '#9fd8ff'), (480, 170, '#fff1c4'))):
+        off = 0.12 * (k * 2 - 1)
+        ex, ey = x + math.cos(rd + off) * L * s, y + math.sin(rd + off) * L * s
+        nx, ny = -math.sin(rd + off), math.cos(rd + off)
+        p = skia.Path(); p.moveTo(x + nx * 20 * s, y + ny * 20 * s); p.lineTo(ex + nx * w_ * s, ey + ny * w_ * s)
+        p.lineTo(ex - nx * w_ * s, ey - ny * w_ * s); p.lineTo(x - nx * 20 * s, y - ny * 20 * s); p.close()
+        sh = skia.GradientShader.MakeLinear([skia.Point(x, y), skia.Point(ex, ey)], [col(colr, int(a * 0.75)), col(colr, 0)])
+        c.drawPath(p, skia.Paint(AntiAlias=True, Shader=sh, MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 14 * s)))
+    if dust:
+        rnd = random.Random(4)
+        for i in range(40):
+            u = rnd.uniform(0.05, 1.0); spread = rnd.uniform(-1, 1) * 140 * s * u
+            px = x + math.cos(rd + 0.12) * 520 * s * u - math.sin(rd) * spread
+            py = y + math.sin(rd + 0.12) * 520 * s * u + math.cos(rd) * spread
+            c.drawCircle(px, py, rnd.uniform(1.5, 3.5) * s, P(color=col('#fff1c4', int(a * (1 - u) * (0.6 + 0.4 * math.sin(t * 3 + i))))))
+    c.drawCircle(x, y, 70 * s, rad(x, y, 70 * s, [col('#ffffff', a), col('#cfeaff', int(a * 0.5)), col('#9fd8ff', 0)], [0, 0.35, 1]))
+    space_rock(c, x, y, 16 * s, rot=t * 20, seed=9, alpha=a, colr='#b9b2a6')
+
+def brain(c, x, y, s, t=0.0, glow=0.0, left=1.0, right=1.0, alpha=255):
+    """Plain brain, side-by-side hemispheres seen from above-ish. left/right 0..1 = how awake each half looks
+    (0 = dimmed/grey). glow 0..1 adds a warm halo."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    if glow > 0:
+        c.drawCircle(0, 0, 230, rad(0, 0, 230, [col('#ffd23f', int(170 * glow)), col('#ffd23f', 0)]))
+    for side, k in ((-1, left), (1, right)):
+        p = skia.Path(); p.moveTo(side * 6, -120)
+        p.cubicTo(side * 120, -140, side * 175, -60, side * 165, 20); p.cubicTo(side * 160, 100, side * 90, 135, side * 6, 120); p.close()
+        top = mix_hx('#c9cbd6', '#ffc1d0', k); bot = mix_hx('#9a9db0', '#f49ab2', k)
+        c.drawPath(p, lin(c, (0, -130, 0, 130), [col(top, a), col(bot, a)]))
+        line_c = mix_hx('#7d8096', '#d0708a', k)
+        for (a0, a1, b0, b1) in ((30, -90, 120, -60), (40, -30, 140, 0), (30, 40, 130, 60), (60, 90, 120, 100)):
+            q = skia.Path(); q.moveTo(side * a0, a1); q.cubicTo(side * (a0 + b0) / 2, a1 - 30, side * (a0 + b0) / 2, b1 + 30, side * b0, b1)
+            c.drawPath(q, P(color=col(line_c, a), stroke=6))
+        c.drawPath(p, P(color=col(mix_hx('#6d7088', '#c0607a', k), a), stroke=6))
     c.restore()

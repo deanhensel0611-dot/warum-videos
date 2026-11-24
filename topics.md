@@ -40,10 +40,10 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why don't penguins freeze? → ep_035_why_dont_penguins_freeze
 - [x] How does a seed grow into a plant? → ep_036_how_does_a_seed_grow_into_a_plant
 - [x] How does sound get to your ears? → ep_037_how_does_sound_get_to_your_ears
-- [ ] Why do things fall down?
-- [ ] How do whales breathe?
-- [ ] How can owls turn their heads so far?
-- [ ] What are shooting stars?
+- [x] Why do things fall down? → ep_038_why_do_things_fall_down
+- [x] How do whales breathe? → ep_039_how_do_whales_breathe
+- [x] How can owls turn their heads so far? → ep_040_how_can_owls_turn_their_heads_so_far
+- [x] What are shooting stars? → ep_041_what_are_shooting_stars
 - [ ] Why is Mars red?
 - [ ] How do ants find their way home?
 - [ ] Why does popcorn pop?
