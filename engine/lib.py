@@ -3090,3 +3090,185 @@ def brain(c, x, y, s, t=0.0, glow=0.0, left=1.0, right=1.0, alpha=255):
             c.drawPath(q, P(color=col(line_c, a), stroke=6))
         c.drawPath(p, P(color=col(mix_hx('#6d7088', '#c0607a', k), a), stroke=6))
     c.restore()
+
+# ---------------- Mars, ants, popcorn, snow (added for ep_042+) ----------------
+_MARS_SPOTS = [(0.10, -0.15, 0.30, 0.13), (0.45, 0.05, 0.22, 0.16), (0.72, -0.30, 0.18, 0.10), (0.30, 0.35, 0.26, 0.09),
+               (0.85, 0.25, 0.20, 0.12), (0.58, -0.45, 0.14, 0.07), (0.02, 0.30, 0.16, 0.08)]
+def mars(c, x, y, r, t=0.0, rot=0.0, gray=0.0, storm=0.0, alpha=255, shade=True, caps=True):
+    """Plain Mars globe. rot shifts the surface features (fraction of a turn); gray 0..1 blends the dust
+    away to the dark basalt underneath; storm 0..1 veils it in a tan dust haze."""
+    a = int(alpha)
+    def g(hx): return mix_hx(hx, mix_hx('#4e4c4a', hx, 0.12), gray)
+    c.drawCircle(x, y, r * 1.12, rad(x, y, r * 1.12, [col('#ff9a5a', int(a * 0.28)), col('#ff9a5a', 0)], [0.85, 1]))
+    c.save(); clip = skia.Path(); clip.addCircle(x, y, r); c.clipPath(clip, doAntiAlias=True)
+    c.drawCircle(x, y, r, rad(x - r * 0.35, y - r * 0.4, r * 1.6, [col(g('#f6a46a'), a), col(g('#d9672f'), a), col(g('#9a3a18'), a)], [0, 0.5, 1]))
+    for (u, v, w_, h_) in _MARS_SPOTS:
+        uu = (u + rot) % 1.0
+        px = x + math.sin((uu - 0.5) * math.pi) * r          # simple globe projection
+        sq = math.cos((uu - 0.5) * math.pi)
+        if sq < 0.05: continue
+        c.drawOval(skia.Rect(px - w_ * r * sq, y + v * r - h_ * r, px + w_ * r * sq, y + v * r + h_ * r),
+                   P(color=col(g('#7a2e14'), int(a * 0.55 * sq)), blur=r * 0.04))
+    # fine streaks / craters for texture
+    rnd = random.Random(11)
+    for i in range(18):
+        uu = (rnd.random() + rot) % 1.0; vv = rnd.uniform(-0.8, 0.8)
+        sq = math.cos((uu - 0.5) * math.pi)
+        if sq < 0.1: continue
+        px = x + math.sin((uu - 0.5) * math.pi) * r; py = y + vv * r; cr = rnd.uniform(0.02, 0.05) * r
+        c.drawOval(skia.Rect(px - cr * sq, py - cr, px + cr * sq, py + cr), P(color=col(g('#8f3a1a'), int(a * 0.5))))
+        c.drawArc(skia.Rect(px - cr * sq, py - cr, px + cr * sq, py + cr), 200, 140, False, P(color=col(g('#ffc49a'), int(a * 0.6)), stroke=max(1.2, cr * 0.3)))
+    if caps:
+        c.drawOval(skia.Rect(x - r * 0.38, y - r * 1.04, x + r * 0.38, y - r * 0.80), P(color=col('#fff6ee', int(a * 0.95)), blur=r * 0.02))
+        c.drawOval(skia.Rect(x - r * 0.22, y + r * 0.86, x + r * 0.22, y + r * 1.02), P(color=col('#fff6ee', int(a * 0.8)), blur=r * 0.02))
+    if storm > 0:
+        for k in range(3):
+            yy = y + (k - 1) * r * 0.32 + math.sin(t * 0.8 + k) * r * 0.05
+            c.drawOval(skia.Rect(x - r * 1.1, yy - r * 0.16, x + r * 1.1, yy + r * 0.16), P(color=col('#f3c18c', int(a * 0.55 * storm)), blur=r * 0.08))
+        c.drawCircle(x, y, r, P(color=col('#e8a66c', int(a * 0.35 * storm))))
+    if shade:
+        c.drawCircle(x, y, r, rad(x - r * 0.45, y - r * 0.45, r * 2.1, [col('#000000', 0), col('#000000', 0), col('#1a0a05', int(a * 0.55))], [0, 0.55, 1]))
+    c.restore()
+
+def ant(c, x, y, s, t, rot=0.0, walk=1.0, alpha=255, colr='#3b2418', gaster=None, legs_long=1.0):
+    """Plain ant seen from above, head pointing along rot (degrees). walk = gait speed (0 = standing)."""
+    a = int(alpha); gaster = gaster or colr
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    ph = t * 14 * walk
+    lp = P(color=col(mix_hx(colr, '#000000', 0.2), a), stroke=4.2)
+    LEGS = (((8, 4), (24, 24), (44, 40)), ((0, 5), (4, 30), (-4, 54)), ((-8, 4), (-24, 26), (-50, 44)))
+    for side in (-1, 1):
+        for i, (hip, knee, foot) in enumerate(LEGS):
+            tri = (i % 2 == 0) == (side > 0)
+            sw = math.sin(ph + (0 if tri else math.pi)) * 9 * min(1, walk * 3)
+            kx, ky = knee[0] * legs_long + sw * 0.5, side * knee[1] * legs_long
+            fx, fy = foot[0] * legs_long + sw, side * foot[1] * legs_long
+            c.drawLine(hip[0], side * hip[1], kx, ky, lp); c.drawLine(kx, ky, fx, fy, lp)
+    # gaster, petiole, thorax, head
+    c.drawOval(skia.Rect(-54, -15, -18, 15), rad(-40, -7, 30, [col(mix_hx(gaster, '#ffffff', 0.35), a), col(gaster, a), col(mix_hx(gaster, '#000000', 0.35), a)], [0, 0.5, 1]))
+    c.drawCircle(-15, 0, 6, P(color=col(colr, a)))
+    c.drawOval(skia.Rect(-12, -8, 16, 8), rad(0, -4, 18, [col(mix_hx(colr, '#ffffff', 0.3), a), col(colr, a)]))
+    c.drawOval(skia.Rect(14, -12, 40, 12), rad(24, -5, 20, [col(mix_hx(colr, '#ffffff', 0.3), a), col(colr, a)]))
+    # antennae (elbowed)
+    sway = math.sin(t * 5) * 6
+    for side in (-1, 1):
+        c.drawLine(36, side * 6, 48, side * (16 + sway * 0.3), lp)
+        c.drawLine(48, side * (16 + sway * 0.3), 68, side * (10 + sway), lp)
+    c.drawCircle(30, -7, 2.6, P(color=col('#ffffff', int(a * 0.5))))
+    c.drawCircle(30, 7, 2.6, P(color=col('#ffffff', int(a * 0.5))))
+    c.restore()
+
+def kernel_path(s=1.0):
+    """Popcorn kernel outline: rounded top, tapering to the tip at the bottom (origin = centre)."""
+    p = skia.Path(); p.moveTo(0, -46 * s)
+    p.cubicTo(30 * s, -46 * s, 40 * s, -20 * s, 34 * s, 6 * s); p.cubicTo(28 * s, 30 * s, 12 * s, 46 * s, 0, 50 * s)
+    p.cubicTo(-12 * s, 46 * s, -28 * s, 30 * s, -34 * s, 6 * s); p.cubicTo(-40 * s, -20 * s, -30 * s, -46 * s, 0, -46 * s); p.close()
+    return p
+
+def popcorn_kernel(c, x, y, s, rot=0.0, section=0.0, steam=0.0, heat=0.0, swell=0.0, t=0.0, alpha=255):
+    """Unpopped popcorn kernel. section 0..1 cuts it open (hull ring, starch, water drop);
+    steam 0..1 turns the water drop into steam puffs; heat tints it hot; swell puffs it up a bit before bursting."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); sc = s * (1 + 0.08 * swell); c.scale(sc, sc)
+    p = kernel_path(1.0)
+    c.drawPath(p, lin(c, (0, -46, 0, 50), [col(mix_hx('#ffc23a', '#ff7a2c', heat * 0.6), a), col(mix_hx('#e98a0c', '#d4421a', heat * 0.6), a)]))
+    # pale tip cap
+    c.save(); c.clipPath(p, doAntiAlias=True)
+    c.drawOval(skia.Rect(-20, 30, 20, 62), P(color=col('#f6e2a8', a)))
+    if section > 0:
+        sa = int(a * section)
+        inner = kernel_path(0.8)
+        c.drawPath(inner, lin(c, (0, -40, 0, 40), [col('#fff6dc', sa), col('#f3dfa8', sa)]))
+        rnd = random.Random(3)
+        for i in range(14):
+            gx, gy = rnd.uniform(-22, 22), rnd.uniform(-30, 26)
+            c.drawCircle(gx, gy, rnd.uniform(2.5, 4.5), P(color=col('#e9cf8a', int(sa * 0.7))))
+        d = 1 - steam
+        if d > 0.02:
+            c.drawPath(_drop_path(0, -2, 14 * d), lin(c, (0, -20, 0, 14), [col('#8fd0ff', int(sa * d)), col('#2f9bff', int(sa * d))]))
+            c.drawCircle(-4, -2, 3.5 * d, P(color=col('#ffffff', int(sa * d * 0.8))))
+        if steam > 0:
+            for i in range(7):
+                ang = i * 2 * math.pi / 7 + t * 2.5; rr = 6 + 18 * steam + 3 * math.sin(t * 6 + i)
+                c.drawCircle(math.cos(ang) * rr, math.sin(ang) * rr * 1.2 - 2, 5 + 4 * steam, P(color=col('#ffffff', int(sa * 0.85 * steam)), blur=1.5))
+    c.restore()
+    c.drawPath(p, P(color=col('#b5560a', a), stroke=2.5))
+    if section > 0:
+        c.drawPath(kernel_path(0.8), P(color=col('#d99a3a', int(a * section)), stroke=2))
+    c.drawOval(skia.Rect(-22, -38, -6, -8), P(color=col('#ffffff', int(a * 0.45)), blur=3))
+    c.restore()
+
+def _drop_path(x, y, r):
+    p = skia.Path(); p.moveTo(x, y - r * 1.6)
+    p.cubicTo(x + r * 0.6, y - r * 0.7, x + r, y - r * 0.1, x + r, y + r * 0.35)
+    p.cubicTo(x + r, y + r * 0.95, x + r * 0.5, y + r * 1.2, x, y + r * 1.2)
+    p.cubicTo(x - r * 0.5, y + r * 1.2, x - r, y + r * 0.95, x - r, y + r * 0.35)
+    p.cubicTo(x - r, y - r * 0.1, x - r * 0.6, y - r * 0.7, x, y - r * 1.6); p.close()
+    return p
+
+def popcorn_puff(c, x, y, s, rot=0.0, k=1.0, seed=0, alpha=255, hull=True):
+    """Popped popcorn: a cluster of creamy foam lobes with a few hull flakes. k 0..1 = burst growth."""
+    if k <= 0: return
+    a = int(alpha); rnd = random.Random(seed)
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s * k, s * k)
+    lobes = [(0, 0, 40)] + [(math.cos(i * 1.15 + rnd.uniform(-0.3, 0.3)) * 36, math.sin(i * 1.15 + rnd.uniform(-0.3, 0.3)) * 30, rnd.uniform(24, 34)) for i in range(6)]
+    for (lx, ly, lr) in lobes:
+        c.drawCircle(lx + 3, ly + 5, lr, P(color=col('#c7a46a', int(a * 0.55))))
+    for (lx, ly, lr) in lobes:
+        c.drawCircle(lx, ly, lr, rad(lx - lr * 0.35, ly - lr * 0.4, lr * 1.5, [col('#ffffff', a), col('#fff4dc', a), col('#ecd6a8', a)], [0, 0.55, 1]))
+    for (lx, ly, lr) in lobes[1:]:
+        c.drawArc(skia.Rect(lx - lr, ly - lr, lx + lr, ly + lr), 20, 120, False, P(color=col('#e2c48c', int(a * 0.5)), stroke=2.5))
+    if hull:
+        for i in range(3):
+            ang = rnd.uniform(0, 2 * math.pi); hx, hy = math.cos(ang) * 30, math.sin(ang) * 26 + 6
+            c.save(); c.translate(hx, hy); c.rotate(math.degrees(ang))
+            fp = skia.Path(); fp.moveTo(-12, -4); fp.quadTo(0, -12, 12, -4); fp.quadTo(0, 6, -12, -4); fp.close()
+            c.drawPath(fp, lin(c, (0, -10, 0, 6), [col('#ffc23a', a), col('#e98a0c', a)]))
+            c.restore()
+    c.restore()
+
+def gauge(c, x, y, r, frac, alpha=255, label=None, accent='#ff5c85', zones=True):
+    """Pressure gauge dial (270° sweep), frac 0..1 = needle position."""
+    a = int(alpha)
+    c.drawCircle(x, y + 6, r + 16, P(color=col('#0b1a3a', int(a * 0.25)), blur=8))
+    c.drawCircle(x, y, r + 16, lin(c, (0, y - r, 0, y + r), [col('#c9d3e2', a), col('#7d8aa3', a)]))
+    c.drawCircle(x, y, r, P(color=col('#ffffff', a)))
+    rect = skia.Rect(x - r * 0.82, y - r * 0.82, x + r * 0.82, y + r * 0.82)
+    if zones:
+        c.drawArc(rect, 135 + 270 * 0.7, 270 * 0.3, False, P(color=col(accent, int(a * 0.8)), stroke=r * 0.1))
+    for i in range(11):
+        ang = math.radians(135 + 27 * i)
+        c.drawLine(x + math.cos(ang) * r * 0.66, y + math.sin(ang) * r * 0.66, x + math.cos(ang) * r * 0.76, y + math.sin(ang) * r * 0.76,
+                   P(color=col('#1b2a4a', a), stroke=5 if i % 5 == 0 else 3))
+    ang = math.radians(135 + 270 * clamp(frac))
+    c.drawLine(x, y, x + math.cos(ang) * r * 0.7, y + math.sin(ang) * r * 0.7, P(color=col(accent, a), stroke=8))
+    c.drawCircle(x, y, 13, P(color=col('#1b2a4a', a)))
+    if label: text_block(c, label, x, y + r * 0.5, size=int(r * 0.26), fill='#1b2a4a', stroke='#ffffff', alpha=a)
+
+def ice_crystal(c, x, y, r, rot=0.0, alpha=255, glint=0.0):
+    """Clear hexagonal ice plate (transparent with pale blue edges and inner facets)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot)
+    hp = hexagon_path(0, 0, r)
+    c.drawPath(hp, P(color=col('#e8f6ff', int(a * 0.28))))
+    c.drawPath(hexagon_path(0, 0, r * 0.62), P(color=col('#bfe6ff', int(a * 0.35)), stroke=max(1.5, r * 0.035)))
+    for k in range(6):
+        ang = math.radians(k * 60 + 30)
+        c.drawLine(math.cos(ang) * r * 0.62, math.sin(ang) * r * 0.62, math.cos(ang) * r * 0.97, math.sin(ang) * r * 0.97,
+                   P(color=col('#bfe6ff', int(a * 0.35)), stroke=max(1.2, r * 0.025)))
+    c.drawPath(hp, P(color=col('#a9dcff', a), stroke=max(2, r * 0.05)))
+    c.drawLine(-r * 0.5, -r * 0.55, -r * 0.1, -r * 0.75, P(color=col('#ffffff', int(a * 0.8)), stroke=max(2, r * 0.06)))
+    if glint > 0:
+        c.drawCircle(r * 0.4, -r * 0.4, r * 0.35 * glint, rad(r * 0.4, -r * 0.4, r * 0.35 * glint + 0.1, [col('#ffffff', int(a * glint)), col('#ffffff', 0)]))
+    c.restore()
+
+def snow_ground(c, y, x0=-20, x1=W + 20, y1=H, seed=2, alpha=255, glow_blue=0.0):
+    """Soft white snow drifts from y down."""
+    a = int(alpha); rnd = random.Random(seed)
+    p = skia.Path(); p.moveTo(x0, y + 30); n = 5; step = (x1 - x0) / n
+    for i in range(n):
+        xa = x0 + step * i; xb = xa + step
+        p.cubicTo(xa + step * 0.3, y - rnd.uniform(10, 60), xa + step * 0.7, y - rnd.uniform(0, 50), xb, y + rnd.uniform(0, 40))
+    p.lineTo(x1, y1); p.lineTo(x0, y1); p.close()
+    c.drawPath(p, lin(c, (0, y - 60, 0, y1), [col('#ffffff', a), col('#e6f0fb', a), col(mix_hx('#c9dcf2', '#5fb6ff', glow_blue), a)], [0, 0.35, 1]))
+    for i in range(30):
+        sx, sy = rnd.uniform(x0, x1), rnd.uniform(y + 40, min(y1, y + 260))
+        c.drawCircle(sx, sy, rnd.uniform(1.5, 3), P(color=col('#ffffff', int(a * 0.9))))

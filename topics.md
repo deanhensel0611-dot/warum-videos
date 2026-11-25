@@ -44,10 +44,15 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How do whales breathe? → ep_039_how_do_whales_breathe
 - [x] How can owls turn their heads so far? → ep_040_how_can_owls_turn_their_heads_so_far
 - [x] What are shooting stars? → ep_041_what_are_shooting_stars
-- [ ] Why is Mars red?
-- [ ] How do ants find their way home?
-- [ ] Why does popcorn pop?
-- [ ] Why is snow white?
+- [x] Why is Mars red? → ep_042_why_is_mars_red
+- [x] How do ants find their way home? → ep_043_how_do_ants_find_their_way_home
+- [x] Why does popcorn pop? → ep_044_why_does_popcorn_pop
+- [x] Why is snow white? → ep_045_why_is_snow_white
 - [ ] Why do we need bones?
 - [ ] Where does the Sun go at night?
 - [ ] Why do we have eyebrows?
+- [ ] How do fireflies glow?
+- [ ] Why does bread rise?
+- [ ] Why does the Moon have craters?
+- [ ] How do birds fly?
+- [ ] Why does metal feel colder than wood?

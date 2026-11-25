@@ -24,7 +24,9 @@ Read before every new episode and apply it. The daily run updates this file (rul
 
 ## Experiments (≈20 % of videos)
 Maximum 1–2 parameters changed per day; each change is tested on at least 3 videos before it becomes a rule. Write active experiments here:
-- **E1 – Cold open (since 2026-11-18, ep_017–019, 0/3 measured):** scene 1 starts already in motion (plane flying, ship floating, grass swaying – no build-up from an empty stage), voice starts at 0.1 s (`lead=0.1` instead of 0.35), a number or claim shows on stage within ~1 s. Goal: fix the early drop-off (TikTok avg. watch time only 2.5–10 s on 63–71 s videos). Judge on TikTok avg. watch time + YouTube avg. view % vs. ep_010–016.
+- **E2 – Shorter videos (since 2026-11-25, ep_042–045, 0/4 measured):** keep the E1 cold open, but cap length at 62–68 s (fewer, shorter lines, tails ≤1.4 s; 7–8 scenes). Reason: E1 videos ran 67–84 s and lost watch share on both platforms; this separates the length effect from the cold-open effect. Judge on TikTok watch share (avg. watch ÷ length) and YouTube avg. view % vs. ep_017–041.
+- **E1 – Cold open (2026-11-18 – 2026-11-25, ep_017–041; measured: 6 TikToks, 4 YouTube Shorts → no benefit, closed):** see finding 2026-11-25. The cold open stays as the default look (no sign it hurts on its own), but it is no longer treated as a fix for the early drop-off.
+- *(old entry)* **E1 – Cold open (since 2026-11-18, ep_017–019, 0/3 measured):** scene 1 starts already in motion (plane flying, ship floating, grass swaying – no build-up from an empty stage), voice starts at 0.1 s (`lead=0.1` instead of 0.35), a number or claim shows on stage within ~1 s. Goal: fix the early drop-off (TikTok avg. watch time only 2.5–10 s on 63–71 s videos). Judge on TikTok avg. watch time + YouTube avg. view % vs. ep_010–016.
 
 ## Findings from the data
 Insights from fewer than 5 videos per feature are marked "uncertain". Separate style effects from topic and posting-time effects.
@@ -49,7 +51,11 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 - 2026-11-24 (n=16 TikTok – 5 new posts on 11-23/24, first since 11-19; YouTube n=11 Shorts in Windsor, unchanged set): first E1 (cold open) videos measured on TikTok – airplanes (ep_017) 453 views / 9.0 s avg. watch (12 % of 74.6 s), plants (ep_020, <24 h old) 25 views / 7.6 s. That is inside the range of the non-E1 general-caption posts (7.6–20.4 s) → no effect visible yet (n=2, **uncertain**). Older non-E1 episodes posted the same day: volcano 315 / 11.6 s, sun 57 / 18.3 s, stars 53 / 7.6 s. Airplanes got the most views of any TikTok so far, but it is also the longest video (74.6 s) and has the lowest watch share – keep an eye on length.
 
+- 2026-11-25 (n=21 TikTok – 5 new: heart, goosebumps, onions, plants, wind; YouTube n=16 Shorts, first E1 Shorts in Windsor: clouds, bats, earthquakes, airplanes, bubbles): **E1 measured on both platforms – no gain.** TikTok E1 (n=6) avg. watch 8.8–11.7 s (mean 10.1 s, 13.8 % of length) vs. non-E1 general-caption posts (n=9) 7.9–20.4 s (mean 12.6 s, 19.6 % of length). YouTube E1 (n=4, bubbles excluded with 1 view) avg. view % 33–44 % (mean 40 %, 32 s) vs. 45–64 % (mean 52 %, 37 s) for older Shorts. Confounded: E1 videos are ~9 s longer (73 s vs 64 s mean) and newer. Views are not worse – clouds (E1) jumped to 1,042 YouTube views in ~3 days, goosebumps got the most TikTok likes so far (17 + 1 comment). Interpretation: the cold open doesn't fix the early drop; length is the more likely lever → E2.
+- TikTok per-video view counts come back as 0 from Windsor again (account total 4,861); avg. watch time still readable.
+
 ## Change history
+- 2026-11-25: E1 closed (no measurable benefit, cold open kept as default). **E2 started: length 62–68 s** on ep_042–045 (65.3 / 64.7 / 62.7 / 64.5 s). New lib props: mars (globe with rot/gray/storm), ant (plain top view, tripod gait, legs_long), kernel_path + popcorn_kernel (section/steam/heat/swell), popcorn_puff, gauge (pressure dial), ice_crystal (clear hex plate), snow_ground.
 - 2026-11-24: No style change (E1 now 2 measured on TikTok, no clear effect yet). E1 cold open continued on ep_038–041. New lib props: apple, hammer, quill (plain white feather), whale (plain blue whale, side view, swim/flukes) + whale_hole + whale_blow (misty V-spout), lungs (fill level), owl (plain, perched, head yaw 0–360° incl. back of head), owl_eye_section (tubular eye + sclerotic ring), vertebra_chain, space_rock, meteor (glowing streak), comet, brain (per-hemisphere awake/asleep). rad()/P() now tolerate zero radius/blur.
 - 2026-11-23: No style change (E1 still 0 measured). E1 cold open continued on ep_034–037. New lib props: day_moon (pale daytime moon, lit part only), gray_moon (true-colour dark moon), penguin (plain emperor, 3/4 view), penguin_top (huddle view), bean_path/bean_seed (with cut-away, swell, crack), seedling (root with gravitropic turn, hooked shoot, unfolding leaves), palm_sapling, cochlea_path, stirrup, ear_section (outer/middle/inner ear cross-section with vibrating drum, ossicles, cochlea fluid, nerve pulses).
 - 2026-11-22: No style change (E1 still 0 measured). E1 cold open continued on ep_030–033. New lib props: elephant (plain icon), updraft (rising chevrons), moth (plain top view), echo_map (sonar-dot outline).
@@ -61,6 +67,13 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-25** (data: 21 TikToks + 16 YouTube Shorts, last 14 days via Windsor.ai)
+- New: 5 more TikToks (heart, goosebumps, onions, plants, wind) and the first E1 Shorts in the YouTube data (clouds, bats, earthquakes, airplanes, bubbles).
+- Worked: clouds Short 1,042 views in ~3 days (best new Short); goosebumps TikTok 17 likes + 1 comment (best engagement so far); YouTube retention on older Shorts steady at 45–64 %.
+- Didn't work: E1 cold open – TikTok 13.8 % watch share vs 19.6 % for non-E1; YouTube 40 % avg. view vs 52 %. But E1 videos are ~9 s longer (73 vs 64 s) → length confounds it.
+- Change today (1 parameter): E1 closed, **E2 = shorter videos, 62–68 s** (cold open kept) on ep_042–045.
+- Uncertain: hook style vs length (E2 will separate them), transitions, sound, posting time; TikTok per-video views are 0 in Windsor again.
 
 **2026-11-24** (data: 16 TikToks + 11 YouTube Shorts, last 14 days via Windsor.ai)
 - New: Dean posted 5 TikToks on 11-23/24 (first since 11-19) – airplanes 453 views (best TikTok so far), volcano 315, sun 57, stars 53, plants 25 (<24 h).
