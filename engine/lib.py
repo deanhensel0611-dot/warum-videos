@@ -3272,3 +3272,212 @@ def snow_ground(c, y, x0=-20, x1=W + 20, y1=H, seed=2, alpha=255, glow_blue=0.0)
     for i in range(30):
         sx, sy = rnd.uniform(x0, x1), rnd.uniform(y + 40, min(y1, y + 260))
         c.drawCircle(sx, sy, rnd.uniform(1.5, 3), P(color=col('#ffffff', int(a * 0.9))))
+
+# ---------------- Bones, faces, fireflies, sunset (added for ep_046+) ----------------
+BONE = '#fff6e0'; BONE_EDGE = '#b08a5a'
+
+def long_bone(c, x, y, s, rot=0.0, alpha=255, section=0.0, hi=None, length=1.0):
+    """Plain long bone (like a femur), centred at x,y, vertical. section 0..1 cuts it open: hard shell, spongy ends,
+    red marrow inside. hi = highlight colour for the whole bone."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    L = 250 * length
+    p = skia.Path(); p.addRoundRect(skia.Rect(-34, -L, 34, L), 30, 30)
+    for sy in (-1, 1):
+        for sx in (-1, 1):
+            q = skia.Path(); q.addCircle(sx * 42, sy * (L + 18), 46)
+            p = skia.Op(p, q, skia.PathOp.kUnion_PathOp)
+    fill = hi or BONE
+    c.drawPath(p, lin(c, (-80, 0, 80, 0), [col(mix_hx(fill, BONE_EDGE, 0.25), a), col(fill, a), col(mix_hx(fill, BONE_EDGE, 0.35), a)], vertical=False, pos=[0, 0.42, 1]))
+    if section > 0:
+        k = clamp(section)
+        c.save(); c.clipPath(p, doAntiAlias=True)
+        # spongy bone at both ends
+        rnd = random.Random(7)
+        for sy in (-1, 1):
+            c.drawOval(skia.Rect(-70 * k, sy * (L + 18) - 50 * k, 70 * k, sy * (L + 18) + 50 * k), P(color=col('#f4d9b0', a)))
+            for i in range(26):
+                px, py = rnd.uniform(-62, 62) * k, sy * (L + 18) + rnd.uniform(-44, 44) * k
+                c.drawCircle(px, py, rnd.uniform(5, 9) * k, P(color=col('#e9a0a0', int(a * 0.8))))
+        # marrow cavity
+        mw = 20 * k
+        c.drawRoundRect(skia.Rect(-mw, -L + 30, mw, L - 30), mw, mw, lin(c, (-mw, 0, mw, 0), [col('#c9283f', a), col('#ff5c6e', a), col('#c9283f', a)], vertical=False, pos=[0, 0.5, 1]))
+        c.restore()
+    c.drawPath(p, P(color=col(BONE_EDGE, a), stroke=5))
+    c.drawLine(-14, -L + 40, -14, L - 40, P(color=col('#ffffff', int(a * 0.55)), stroke=8))
+    c.restore()
+
+def _bone_seg(c, x0, y0, x1, y1, w, a, fill):
+    c.drawLine(x0, y0, x1, y1, P(color=col(BONE_EDGE, a), stroke=w + 6))
+    c.drawLine(x0, y0, x1, y1, P(color=col(fill, a), stroke=w))
+    for (xx, yy) in ((x0, y0), (x1, y1)):
+        c.drawCircle(xx, yy, w * 0.75, P(color=col(fill, a))); c.drawCircle(xx, yy, w * 0.75, P(color=col(BONE_EDGE, a), stroke=3))
+
+def xray_body(c, x, y, s, t, alpha=255, bones=1.0, hi=(), hi_col='#ffd23f', arm_lift=0.0, skin=0.85):
+    """Plain X-ray style body (front view): pale blue silhouette with the skeleton inside. y = feet line.
+    bones 0..1 fades the skeleton in; hi = set of parts to highlight: skull, ribs, spine, pelvis, arms, legs, hands, feet.
+    arm_lift 0..1 raises the right arm (viewer's right)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    sk = int(a * skin)
+    # silhouette
+    body = skia.Path()
+    body.addCircle(0, -880, 95)
+    body.addRoundRect(skia.Rect(-38, -800, 38, -740), 20, 20)
+    body.addRoundRect(skia.Rect(-150, -760, 150, -360), 70, 70)
+    body.addRoundRect(skia.Rect(-130, -420, 130, -300), 50, 50)
+    for sx in (-1, 1):
+        body.addRoundRect(skia.Rect(sx * 75 - 52, -330, sx * 75 + 52, -20), 50, 50)
+        body.addOval(skia.Rect(sx * 85 - 60, -40, sx * 85 + 60, 10))
+    c.drawPath(body, lin(c, (0, -980, 0, 0), [col('#9fd2ff', sk), col('#5fa8f0', sk)]))
+    arms = []
+    for sx in (-1, 1):
+        sx0, sy0 = sx * 132, -720
+        a1 = math.radians(98) if sx < 0 else math.radians(lerp(82, -55, ease_in_out(clamp(arm_lift))))
+        a2 = a1 + (math.radians(8) if sx < 0 else math.radians(lerp(-8, -20, clamp(arm_lift))))
+        elx, ely = sx0 + math.cos(a1) * 200, sy0 + math.sin(a1) * 200
+        hx, hy = elx + math.cos(a2) * 185, ely + math.sin(a2) * 185
+        c.drawLine(sx0, sy0, elx, ely, P(color=col('#7fbcf5', sk), stroke=86))
+        c.drawLine(elx, ely, hx, hy, P(color=col('#7fbcf5', sk), stroke=74))
+        c.drawCircle(hx + math.cos(a2) * 40, hy + math.sin(a2) * 40, 46, P(color=col('#7fbcf5', sk)))
+        arms.append((sx0, sy0, elx, ely, hx, hy, a2))
+    if bones > 0:
+        ba = int(a * clamp(bones))
+        def F(part): return hi_col if part in hi else BONE
+        # skull
+        c.drawOval(skia.Rect(-70, -965, 70, -820), P(color=col(F('skull'), ba)))
+        c.drawRoundRect(skia.Rect(-46, -850, 46, -790), 24, 24, P(color=col(F('skull'), ba)))
+        c.drawOval(skia.Rect(-70, -965, 70, -820), P(color=col(BONE_EDGE, ba), stroke=4))
+        c.drawRoundRect(skia.Rect(-46, -850, 46, -790), 24, 24, P(color=col(BONE_EDGE, ba), stroke=4))
+        # spine
+        for i in range(14):
+            yy = -785 + i * 30
+            c.drawRoundRect(skia.Rect(-15, yy, 15, yy + 22), 8, 8, P(color=col(F('spine'), ba)))
+            c.drawRoundRect(skia.Rect(-15, yy, 15, yy + 22), 8, 8, P(color=col(BONE_EDGE, ba), stroke=3))
+        # collarbones
+        for sx in (-1, 1):
+            _bone_seg(c, sx * 20, -735, sx * 140, -722, 14, ba, F('arms'))
+        # ribs
+        for i in range(6):
+            yy = -690 + i * 42; w_ = 112 - abs(i - 2) * 6
+            for sx in (-1, 1):
+                rp = skia.Path(); rp.moveTo(sx * 16, yy); rp.cubicTo(sx * w_, yy - 22, sx * (w_ + 14), yy + 30, sx * (w_ - 20), yy + 48)
+                c.drawPath(rp, P(color=col(BONE_EDGE, ba), stroke=16)); c.drawPath(rp, P(color=col(F('ribs'), ba), stroke=10))
+        c.drawRoundRect(skia.Rect(-12, -700, 12, -520), 10, 10, P(color=col(F('ribs'), ba)))
+        # pelvis
+        pp = skia.Path(); pp.moveTo(-120, -400); pp.cubicTo(-130, -330, -70, -300, -30, -310); pp.lineTo(30, -310)
+        pp.cubicTo(70, -300, 130, -330, 120, -400); pp.cubicTo(60, -370, -60, -370, -120, -400); pp.close()
+        c.drawPath(pp, P(color=col(F('pelvis'), ba))); c.drawPath(pp, P(color=col(BONE_EDGE, ba), stroke=4))
+        # legs
+        for sx in (-1, 1):
+            _bone_seg(c, sx * 80, -330, sx * 78, -175, 22, ba, F('legs'))
+            _bone_seg(c, sx * 78, -165, sx * 82, -50, 18, ba, F('legs'))
+            for k in range(5):
+                c.drawLine(sx * (60 + k * 9), -30, sx * (55 + k * 14), -2, P(color=col(F('feet'), ba), stroke=7))
+            c.drawOval(skia.Rect(sx * 82 - 26, -48, sx * 82 + 26, -22), P(color=col(F('feet'), ba)))
+        # arms
+        for (sx0, sy0, elx, ely, hx, hy, a2) in arms:
+            _bone_seg(c, sx0, sy0, elx, ely, 18, ba, F('arms'))
+            _bone_seg(c, elx - 6, ely, hx - 6, hy, 11, ba, F('arms'))
+            _bone_seg(c, elx + 8, ely, hx + 8, hy, 10, ba, F('arms'))
+            cx_, cy_ = hx + math.cos(a2) * 34, hy + math.sin(a2) * 34
+            c.drawCircle(cx_, cy_, 18, P(color=col(F('hands'), ba)))
+            for k in range(5):
+                da = math.radians(-40 + k * 20) + a2
+                c.drawLine(cx_, cy_, cx_ + math.cos(da) * 42, cy_ + math.sin(da) * 42, P(color=col(F('hands'), ba), stroke=7))
+    c.restore()
+
+def plain_face(c, x, y, s, t, alpha=255, brows=1.0, raise_=0.0, frown=0.0, skin='#f2c9a6', hair='#4a3326', iris='#6b8f5a',
+               sweat=0.0, look=(0, 0)):
+    """Plain, neutral adult face (front view, infographic). brows 0..1 fades the eyebrows (0 = no eyebrows);
+    raise_ 0..1 lifts them (surprise), frown 0..1 pulls them down/in. No smile, no blush."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    head = skia.Path(); head.addOval(skia.Rect(-230, -300, 230, 320))
+    for sx in (-1, 1):
+        c.drawOval(skia.Rect(sx * 232 - 30, -40, sx * 232 + 30, 70), P(color=col(mix_hx(skin, '#c98a6a', 0.3), a)))
+    c.drawPath(head, rad(-60, -80, 420, [col(mix_hx(skin, '#ffffff', 0.25), a), col(skin, a), col(mix_hx(skin, '#c98a6a', 0.35), a)], [0, 0.6, 1]))
+    c.save(); c.clipPath(head, doAntiAlias=True)
+    hp = skia.Path(); hp.moveTo(-260, -60); hp.cubicTo(-200, -170, -60, -205, 40, -200); hp.cubicTo(140, -195, 220, -160, 260, -90)
+    hp.lineTo(260, -330); hp.lineTo(-260, -330); hp.close()
+    c.drawPath(hp, lin(c, (0, -320, 0, -60), [col(mix_hx(hair, '#000000', 0.2), a), col(hair, a)]))
+    c.restore()
+    # eyes
+    for sx in (-1, 1):
+        human_eye(c, sx * 95, 10, 0.5, t + (0.4 if sx > 0 else 0), alpha=a, iris=iris)
+    # eyebrows
+    if brows > 0:
+        ba = int(a * clamp(brows))
+        for sx in (-1, 1):
+            lift = -32 * raise_ + 18 * frown
+            inner_dy = 22 * frown - 10 * raise_
+            bp = skia.Path()
+            x_in, x_out = sx * 40, sx * 165
+            bp.moveTo(x_in, -62 + lift + inner_dy); bp.cubicTo(sx * 80, -96 + lift, sx * 130, -100 + lift, x_out, -66 + lift)
+            c.drawPath(bp, P(color=col(mix_hx(hair, '#000000', 0.1), ba), stroke=26))
+            # hair strokes pointing outward
+            m = skia.PathMeasure(bp, False); Lb = m.getLength()
+            for k in range(9):
+                pos, tan = m.getPosTan(Lb * (0.08 + 0.1 * k))
+                if pos is None: continue
+                c.drawLine(pos.x(), pos.y() + 4, pos.x() + sx * 18, pos.y() - 6, P(color=col(hair, ba), stroke=5))
+    # nose and neutral mouth
+    np_ = skia.Path(); np_.moveTo(-8, 30); np_.cubicTo(-20, 110, -40, 140, -10, 150); np_.lineTo(18, 150)
+    c.drawPath(np_, P(color=col(mix_hx(skin, '#8a5a3a', 0.45), a), stroke=7))
+    c.drawLine(-62, 215, 62, 215, P(color=col('#a65a5a', a), stroke=10))
+    if sweat > 0:
+        for i, (dx, ph) in enumerate(((-120, 0.0), (40, 0.35), (150, 0.7))):
+            u = (sweat * 1.5 + ph) % 1.0
+            yy = lerp(-220, -50, u)
+            r = 14
+            dp = skia.Path(); dp.moveTo(dx, yy - r * 2); dp.cubicTo(dx + r, yy - r * 0.6, dx + r, yy + r, dx, yy + r); dp.cubicTo(dx - r, yy + r, dx - r, yy - r * 0.6, dx, yy - r * 2); dp.close()
+            c.drawPath(dp, rad(dx - 3, yy, r * 1.4, [col('#ffffff', a), col('#8fd3ff', a), col('#3fa9ff', a)], [0, 0.4, 1]))
+    c.restore()
+
+def firefly(c, x, y, s, t, glow=1.0, rot=0.0, alpha=255, fly=False, lantern_cut=0.0):
+    """Plain firefly (lightning beetle), top view, head up. glow 0..1 lights the lantern at the tail.
+    fly=True opens the wing covers and flaps the clear hind wings."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    g = clamp(glow)
+    if g > 0:
+        c.drawCircle(0, 120, 230 * (0.6 + 0.4 * g), rad(0, 120, 230 * (0.6 + 0.4 * g), [col('#eaff6b', int(a * 0.7 * g)), col('#c8ff3a', int(a * 0.25 * g)), col('#c8ff3a', 0)], [0, 0.4, 1]))
+    # legs
+    for i, yy in enumerate((-20, 20, 60)):
+        for sx in (-1, 1):
+            sw = 6 * math.sin(t * 9 + i * 2 + sx) if not fly else 0
+            c.drawLine(sx * 20, yy, sx * 70, yy + 20 + sw, P(color=col('#2a2a33', a), stroke=7))
+            c.drawLine(sx * 70, yy + 20 + sw, sx * 86, yy + 60 + sw, P(color=col('#2a2a33', a), stroke=6))
+    # abdomen with lantern segments
+    ab = skia.Path(); ab.addOval(skia.Rect(-46, 0, 46, 190))
+    c.drawPath(ab, P(color=col('#3a3530', a)))
+    c.save(); c.clipPath(ab, doAntiAlias=True)
+    lc = mix_hx('#d9d2a8', '#f4ff8a', g)
+    c.drawRect(skia.Rect(-50, 120, 50, 200), lin(c, (0, 120, 0, 200), [col(lc, a), col(mix_hx(lc, '#ffffff', 0.4 * g), a)]))
+    for yy in (138, 160):
+        c.drawLine(-50, yy, 50, yy, P(color=col('#8a8460', int(a * (1 - 0.6 * g))), stroke=3))
+    c.restore()
+    # hind wings when flying
+    if fly:
+        fl = 0.5 + 0.5 * math.sin(t * 40)
+        for sx in (-1, 1):
+            wp = skia.Path(); wp.moveTo(sx * 10, -10); wp.cubicTo(sx * (120 + 60 * fl), -60, sx * (180 + 40 * fl), 80, sx * 30, 120); wp.close()
+            c.drawPath(wp, P(color=col('#e6f2ff', int(a * 0.5))))
+            c.drawPath(wp, P(color=col('#9fb8d6', int(a * 0.7)), stroke=3))
+    # wing covers (elytra)
+    for sx in (-1, 1):
+        op = (math.radians(28) if fly else 0) * sx
+        c.save(); c.translate(sx * 2, -40); c.rotate(math.degrees(op))
+        ep = skia.Path(); ep.moveTo(0, 0); ep.cubicTo(sx * 52, 0, sx * 54, 90, sx * 40, 150); ep.cubicTo(sx * 26, 168, sx * 6, 160, 0, 150); ep.close()
+        c.drawPath(ep, lin(c, (0, 0, 0, 160), [col('#4a443c', a), col('#2e2a26', a)]))
+        c.drawPath(ep, P(color=col('#d9c27a', a), stroke=5))
+        c.drawLine(sx * 18, 20, sx * 24, 120, P(color=col('#ffffff', int(a * 0.25)), stroke=6))
+        c.restore()
+    # shield (pronotum) with the red/yellow pattern, head under it
+    c.drawOval(skia.Rect(-24, -100, 24, -60), P(color=col('#2a2a33', a)))
+    sh = skia.Path(); sh.addOval(skia.Rect(-52, -82, 52, -30))
+    c.drawPath(sh, lin(c, (0, -82, 0, -30), [col('#ffd23f', a), col('#ff9f1c', a)]))
+    c.drawRoundRect(skia.Rect(-30, -72, 30, -40), 14, 14, P(color=col('#ff6f6f', a)))
+    c.drawLine(0, -76, 0, -34, P(color=col('#2a2a33', a), stroke=6))
+    c.drawPath(sh, P(color=col('#b86a10', a), stroke=3))
+    # antennae
+    for sx in (-1, 1):
+        ap = skia.Path(); ap.moveTo(sx * 10, -96); ap.cubicTo(sx * 30, -150, sx * 60, -170, sx * 70 + 4 * math.sin(t * 3 + sx), -200)
+        c.drawPath(ap, P(color=col('#2a2a33', a), stroke=6))
+    c.restore()

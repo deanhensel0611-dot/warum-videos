@@ -24,7 +24,7 @@ Read before every new episode and apply it. The daily run updates this file (rul
 
 ## Experiments (≈20 % of videos)
 Maximum 1–2 parameters changed per day; each change is tested on at least 3 videos before it becomes a rule. Write active experiments here:
-- **E2 – Shorter videos (since 2026-11-25, ep_042–045, 0/4 measured):** keep the E1 cold open, but cap length at 62–68 s (fewer, shorter lines, tails ≤1.4 s; 7–8 scenes). Reason: E1 videos ran 67–84 s and lost watch share on both platforms; this separates the length effect from the cold-open effect. Judge on TikTok watch share (avg. watch ÷ length) and YouTube avg. view % vs. ep_017–041.
+- **E2 – Shorter videos (since 2026-11-25, ep_042–049, 0/8 measured; continued 2026-11-26 on ep_046–049: 62.2 / 61.5 / 65.0 / 68.0 s):** keep the E1 cold open, but cap length at 62–68 s (fewer, shorter lines, tails ≤1.4 s; 7–8 scenes). Reason: E1 videos ran 67–84 s and lost watch share on both platforms; this separates the length effect from the cold-open effect. Judge on TikTok watch share (avg. watch ÷ length) and YouTube avg. view % vs. ep_017–041.
 - **E1 – Cold open (2026-11-18 – 2026-11-25, ep_017–041; measured: 6 TikToks, 4 YouTube Shorts → no benefit, closed):** see finding 2026-11-25. The cold open stays as the default look (no sign it hurts on its own), but it is no longer treated as a fix for the early drop-off.
 - *(old entry)* **E1 – Cold open (since 2026-11-18, ep_017–019, 0/3 measured):** scene 1 starts already in motion (plane flying, ship floating, grass swaying – no build-up from an empty stage), voice starts at 0.1 s (`lead=0.1` instead of 0.35), a number or claim shows on stage within ~1 s. Goal: fix the early drop-off (TikTok avg. watch time only 2.5–10 s on 63–71 s videos). Judge on TikTok avg. watch time + YouTube avg. view % vs. ep_010–016.
 
@@ -54,7 +54,10 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 - 2026-11-25 (n=21 TikTok – 5 new: heart, goosebumps, onions, plants, wind; YouTube n=16 Shorts, first E1 Shorts in Windsor: clouds, bats, earthquakes, airplanes, bubbles): **E1 measured on both platforms – no gain.** TikTok E1 (n=6) avg. watch 8.8–11.7 s (mean 10.1 s, 13.8 % of length) vs. non-E1 general-caption posts (n=9) 7.9–20.4 s (mean 12.6 s, 19.6 % of length). YouTube E1 (n=4, bubbles excluded with 1 view) avg. view % 33–44 % (mean 40 %, 32 s) vs. 45–64 % (mean 52 %, 37 s) for older Shorts. Confounded: E1 videos are ~9 s longer (73 s vs 64 s mean) and newer. Views are not worse – clouds (E1) jumped to 1,042 YouTube views in ~3 days, goosebumps got the most TikTok likes so far (17 + 1 comment). Interpretation: the cold open doesn't fix the early drop; length is the more likely lever → E2.
 - TikTok per-video view counts come back as 0 from Windsor again (account total 4,861); avg. watch time still readable.
 
+- 2026-11-26 (n=24 TikTok – 3 new: teeth, magnets, spiders + ships <24 h; YouTube n=19 Shorts, new: penguins, seed, sound): E2 still **0 measured** (ep_042–045 not posted anywhere yet; first one goes live on YouTube 11-28). TikTok watch share (avg. watch ÷ length, general captions, ≥24 h, n=18): top quartile leaves 33 %, caterpillar 27 %, spiders 26 %, sun 24 %; bottom quartile airplanes 12 %, thunder 12 %, onions 12 %, plants 13 %. Spiders (75.7 s, E1) is in the top group → length alone doesn't explain the bottom; 3 of the top 4 are nature/biology "building/transforming" topics (topic effect, **uncertain but repeating**, n=4). YouTube: new Shorts penguins 334 views / 33 %, sound 44 / 34 % – both E1, consistent with E1's lower view % (now n=6, mean ~38 % vs ~52 % for pre-E1). Airplanes Short grew to 983 views.
+
 ## Change history
+- 2026-11-26: No new style change (E2 0/4 measured – nothing published yet). E2 (62–68 s) continued on ep_046–049. New lib props: long_bone (with marrow cut-away), xray_body (plain X-ray skeleton, highlightable parts, arm lift), plain_face (neutral adult face, brows on/off, raise/frown, sweat), firefly (plain top view, glowing lantern, flight wings), BONE colours.
 - 2026-11-25: E1 closed (no measurable benefit, cold open kept as default). **E2 started: length 62–68 s** on ep_042–045 (65.3 / 64.7 / 62.7 / 64.5 s). New lib props: mars (globe with rot/gray/storm), ant (plain top view, tripod gait, legs_long), kernel_path + popcorn_kernel (section/steam/heat/swell), popcorn_puff, gauge (pressure dial), ice_crystal (clear hex plate), snow_ground.
 - 2026-11-24: No style change (E1 now 2 measured on TikTok, no clear effect yet). E1 cold open continued on ep_038–041. New lib props: apple, hammer, quill (plain white feather), whale (plain blue whale, side view, swim/flukes) + whale_hole + whale_blow (misty V-spout), lungs (fill level), owl (plain, perched, head yaw 0–360° incl. back of head), owl_eye_section (tubular eye + sclerotic ring), vertebra_chain, space_rock, meteor (glowing streak), comet, brain (per-hemisphere awake/asleep). rad()/P() now tolerate zero radius/blur.
 - 2026-11-23: No style change (E1 still 0 measured). E1 cold open continued on ep_034–037. New lib props: day_moon (pale daytime moon, lit part only), gray_moon (true-colour dark moon), penguin (plain emperor, 3/4 view), penguin_top (huddle view), bean_path/bean_seed (with cut-away, swell, crack), seedling (root with gravitropic turn, hooked shoot, unfolding leaves), palm_sapling, cochlea_path, stirrup, ear_section (outer/middle/inner ear cross-section with vibrating drum, ossicles, cochlea fluid, nerve pulses).
@@ -67,6 +70,13 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-26** (data: 24 TikToks + 19 YouTube Shorts, last 14 days via Windsor.ai)
+- New: TikTok teeth 373 views, magnets 261, spiders 66 (19.8 s avg. watch = 26 % – best new one), ships 14 (<24 h); YouTube penguins 334 views, sound 44, seed 4.
+- Worked: biology "building/transforming" topics keep the best TikTok watch share (leaves 33 %, caterpillar 27 %, spiders 26 %); sun 24 %.
+- Didn't work: airplanes, thunder, onions, plants at 12–13 % watch share; E1 Shorts on YouTube (penguins, sound) only 33–34 % avg. view.
+- Change today: none – E2 (62–68 s) has 0/4 measured, so it continues on ep_046–049 (62–68 s).
+- Uncertain: length vs topic (spiders is long but top) – E2 data from 11-28 on will tell; TikTok views per video readable again.
 
 **2026-11-25** (data: 21 TikToks + 16 YouTube Shorts, last 14 days via Windsor.ai)
 - New: 5 more TikToks (heart, goosebumps, onions, plants, wind) and the first E1 Shorts in the YouTube data (clouds, bats, earthquakes, airplanes, bubbles).

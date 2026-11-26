@@ -48,10 +48,10 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] How do ants find their way home? → ep_043_how_do_ants_find_their_way_home
 - [x] Why does popcorn pop? → ep_044_why_does_popcorn_pop
 - [x] Why is snow white? → ep_045_why_is_snow_white
-- [ ] Why do we need bones?
-- [ ] Where does the Sun go at night?
-- [ ] Why do we have eyebrows?
-- [ ] How do fireflies glow?
+- [x] Why do we need bones? → ep_046_why_do_we_need_bones
+- [x] Where does the Sun go at night? → ep_047_where_does_the_sun_go_at_night
+- [x] Why do we have eyebrows? → ep_048_why_do_we_have_eyebrows
+- [x] How do fireflies glow? → ep_049_how_do_fireflies_glow
 - [ ] Why does bread rise?
 - [ ] Why does the Moon have craters?
 - [ ] How do birds fly?
