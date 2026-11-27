@@ -52,7 +52,15 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Where does the Sun go at night? → ep_047_where_does_the_sun_go_at_night
 - [x] Why do we have eyebrows? → ep_048_why_do_we_have_eyebrows
 - [x] How do fireflies glow? → ep_049_how_do_fireflies_glow
-- [ ] Why does bread rise?
-- [ ] Why does the Moon have craters?
-- [ ] How do birds fly?
-- [ ] Why does metal feel colder than wood?
+- [x] Why does bread rise? → ep_050_why_does_bread_rise
+- [x] Why does the Moon have craters? → ep_051_why_does_the_moon_have_craters
+- [x] How do birds fly? → ep_052_how_do_birds_fly
+- [x] Why does metal feel colder than wood? → ep_053_why_does_metal_feel_colder_than_wood
+- [ ] Why does salt melt ice?
+- [ ] How do glow sticks glow?
+- [ ] How do rockets move in empty space?
+- [ ] Why are sunsets red?
+- [ ] How does a microwave heat food?
+- [ ] How do submarines sink and rise?
+- [ ] How do our eyes see color?
+- [ ] How do hummingbirds hover?

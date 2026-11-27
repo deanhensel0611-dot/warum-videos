@@ -3481,3 +3481,322 @@ def firefly(c, x, y, s, t, glow=1.0, rot=0.0, alpha=255, fly=False, lantern_cut=
         ap = skia.Path(); ap.moveTo(sx * 10, -96); ap.cubicTo(sx * 30, -150, sx * 60, -170, sx * 70 + 4 * math.sin(t * 3 + sx), -200)
         c.drawPath(ap, P(color=col('#2a2a33', a), stroke=6))
     c.restore()
+
+# ---------------- Bread, Moon craters, Birds, Heat (added for ep_050-053) ----------------
+DOUGH = '#f3dfb4'; CRUST = '#c9822f'; CRUMB = '#fbeccb'
+
+def yeast_cell(c, x, y, r, t=0.0, bud=0.0, alpha=255, seed=0):
+    """Plain budding yeast cell (oval, cream, with vacuole); bud 0..1 grows a daughter cell."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(20 * math.sin(seed * 1.7) + 4 * math.sin(t * 1.3 + seed))
+    def cell(cx, cy, rr):
+        c.drawOval(skia.Rect(cx - rr, cy - rr * 0.82, cx + rr, cy + rr * 0.82), rad(cx - rr * 0.35, cy - rr * 0.35, rr * 1.6,
+                   [col('#fff8e6', a), col('#f1dca6', a), col('#d9b873', a)], [0, 0.55, 1]))
+        c.drawOval(skia.Rect(cx - rr, cy - rr * 0.82, cx + rr, cy + rr * 0.82), P(color=col('#a8823c', a), stroke=max(2, rr * 0.07)))
+    if bud > 0:
+        br = r * 0.55 * clamp(bud)
+        cell(r * 0.95 + br * 0.7, -r * 0.2, br)
+    cell(0, 0, r)
+    c.drawCircle(-r * 0.15, r * 0.05, r * 0.32, P(color=col('#cfe6f0', int(a * 0.85))))
+    c.drawCircle(-r * 0.15, r * 0.05, r * 0.32, P(color=col('#8fb3c4', int(a * 0.8)), stroke=max(1.5, r * 0.04)))
+    c.drawCircle(r * 0.38, -r * 0.25, r * 0.12, P(color=col('#b9924c', int(a * 0.8))))
+    c.drawOval(skia.Rect(-r * 0.7, -r * 0.62, -r * 0.2, -r * 0.4), P(color=col('#ffffff', int(a * 0.7))))
+    c.restore()
+
+def gas_bubble(c, x, y, r, alpha=230, colr='#ffffff'):
+    """Clean CO2 gas bubble with rim + highlight (for dough/liquids)."""
+    if r <= 0.5: return
+    a = int(alpha)
+    c.drawCircle(x, y, r, rad(x - r * 0.3, y - r * 0.3, r * 1.4, [col(colr, int(a * 0.25)), col(colr, int(a * 0.55))]))
+    c.drawCircle(x, y, r, P(color=col(colr, a), stroke=max(1.5, r * 0.12)))
+    c.drawCircle(x - r * 0.35, y - r * 0.35, r * 0.22, P(color=col('#ffffff', a)))
+
+def dough_path(x, y, s, rise=0.0):
+    """Dough blob resting on y (bottom), width ~560*s, height 170..330*s with rise 0..1."""
+    w_ = 280 * s * (1 + 0.12 * rise); h_ = lerp(170, 330, clamp(rise)) * s
+    p = skia.Path(); p.moveTo(x - w_, y)
+    p.cubicTo(x - w_ * 1.05, y - h_ * 0.75, x - w_ * 0.55, y - h_, x, y - h_)
+    p.cubicTo(x + w_ * 0.55, y - h_, x + w_ * 1.05, y - h_ * 0.75, x + w_, y); p.close()
+    return p, w_, h_
+
+def dough(c, x, y, s, t=0.0, rise=0.0, section=0.0, bubbles=0.0, alpha=255, seed=3):
+    """Ball of bread dough (side view). section 0..1 cuts it open; bubbles 0..1 grows CO2 pockets inside."""
+    a = int(alpha); p, w_, h_ = dough_path(x, y, s, rise)
+    c.drawOval(skia.Rect(x - w_ * 1.05, y - 18 * s, x + w_ * 1.05, y + 22 * s), P(color=col('#1b2a4a', int(a * 0.18)), blur=10 * s))
+    c.drawPath(p, rad(x - w_ * 0.3, y - h_ * 0.8, w_ * 1.8, [col('#fff6df', a), col(DOUGH, a), col('#dcbc80', a)], [0, 0.5, 1]))
+    if section > 0 or bubbles > 0:
+        c.save(); c.clipPath(p, doAntiAlias=True)
+        if section > 0:
+            c.drawPath(p, P(color=col(CRUMB, int(a * section))))
+        rnd = random.Random(seed)
+        for i in range(26):
+            bx = x + rnd.uniform(-0.82, 0.82) * w_; by = y - rnd.uniform(0.08, 0.85) * h_
+            br = rnd.uniform(9, 26) * s * clamp(bubbles) * (0.6 + 0.5 * rise)
+            gas_bubble(c, bx + 2 * math.sin(t * 2 + i), by, br, alpha=int(a * (0.55 + 0.45 * section)), colr='#ffffff' if section > 0.5 else '#fff9ec')
+        c.restore()
+    c.drawPath(p, P(color=col('#c9a462', a), stroke=max(2, 5 * s)))
+    c.drawArc(skia.Rect(x - w_ * 0.6, y - h_ * 0.95, x + w_ * 0.1, y - h_ * 0.35), 200, 60, False, P(color=col('#ffffff', int(a * 0.55)), stroke=12 * s))
+
+def gluten_net(c, x0, y0, x1, y1, t=0.0, stretch=0.0, alpha=230, colr='#e8b04a', n=6, seed=2):
+    """Stretchy gluten protein network: wavy strands crossing; stretch 0..1 straightens them and spreads the cells."""
+    a = int(alpha); rnd = random.Random(seed)
+    amp = lerp(26, 6, clamp(stretch))
+    for k in range(n):
+        for horiz in (True, False):
+            p = skia.Path(); f = (k + 0.5) / n; ph = rnd.uniform(0, 6)
+            for i in range(41):
+                u = i / 40
+                if horiz:
+                    px = lerp(x0, x1, u); py = lerp(y0, y1, f) + amp * math.sin(u * 14 + ph + t * 0.8)
+                else:
+                    px = lerp(x0, x1, f) + amp * math.sin(u * 14 + ph + t * 0.8); py = lerp(y0, y1, u)
+                (p.moveTo if i == 0 else p.lineTo)(px, py)
+            c.drawPath(p, P(color=col(mix_hx(colr, '#ffffff', 0.35), a), stroke=13))
+            c.drawPath(p, P(color=col(colr, a), stroke=6))
+
+def bread_loaf(c, x, y, s, cut=0.0, alpha=255, seed=5, steam=0.0, t=0.0):
+    """Baked loaf (side view, resting on y). cut 0..1 reveals the crumb with its frozen gas holes."""
+    a = int(alpha); w_ = 300 * s; h_ = 300 * s
+    p = skia.Path(); p.moveTo(x - w_, y)
+    p.cubicTo(x - w_ * 1.08, y - h_ * 0.7, x - w_ * 0.6, y - h_, x, y - h_)
+    p.cubicTo(x + w_ * 0.6, y - h_, x + w_ * 1.08, y - h_ * 0.7, x + w_, y); p.close()
+    c.drawOval(skia.Rect(x - w_ * 1.05, y - 18 * s, x + w_ * 1.05, y + 24 * s), P(color=col('#1b2a4a', int(a * 0.2)), blur=10 * s))
+    c.drawPath(p, rad(x - w_ * 0.3, y - h_ * 0.85, w_ * 1.9, [col('#f0b45c', a), col(CRUST, a), col('#8d5418', a)], [0, 0.55, 1]))
+    if cut > 0:
+        c.save(); c.clipPath(p, doAntiAlias=True)
+        inner = skia.Path(); m = 22 * s
+        inner.moveTo(x - w_ + m, y)
+        inner.cubicTo(x - w_ * 1.08 + m * 1.4, y - h_ * 0.7 + m * 0.5, x - w_ * 0.6, y - h_ + m, x, y - h_ + m)
+        inner.cubicTo(x + w_ * 0.6, y - h_ + m, x + w_ * 1.08 - m * 1.4, y - h_ * 0.7 + m * 0.5, x + w_ - m, y); inner.close()
+        c.saveLayerAlpha(None, int(a * clamp(cut)))
+        c.drawPath(inner, rad(x, y - h_ * 0.5, w_, [col('#fff4dc'), col(CRUMB), col('#efd7a6')], [0, 0.6, 1]))
+        c.save(); c.clipPath(inner, doAntiAlias=True)
+        rnd = random.Random(seed)
+        for i in range(70):
+            hx = x + rnd.uniform(-0.9, 0.9) * w_; hy = y - rnd.uniform(0.05, 0.9) * h_
+            hr = rnd.uniform(4, 15) * s; asp = rnd.uniform(0.6, 1.0)
+            c.drawOval(skia.Rect(hx - hr, hy - hr * asp, hx + hr, hy + hr * asp), P(color=col('#d9b97a')))
+            c.drawArc(skia.Rect(hx - hr, hy - hr * asp, hx + hr, hy + hr * asp), 20, 140, False, P(color=col('#fffaf0'), stroke=max(1.5, hr * 0.25)))
+        c.restore(); c.restore(); c.restore()
+    else:
+        for k in range(3):
+            sx = x - w_ * 0.45 + k * w_ * 0.42
+            sc_ = skia.Path(); sc_.moveTo(sx - 40 * s, y - h_ * 0.62); sc_.quadTo(sx, y - h_ * 0.86, sx + 50 * s, y - h_ * 0.78)
+            c.drawPath(sc_, P(color=col('#f8d9a0', a), stroke=16 * s)); c.drawPath(sc_, P(color=col('#e6b26a', a), stroke=7 * s))
+    c.drawPath(p, P(color=col('#7a4612', a), stroke=max(2, 5 * s)))
+    if steam > 0:
+        for i in range(3):
+            ph = (t * 0.5 + i / 3) % 1.0; sx = x + (i - 1) * 110 * s
+            sp = skia.Path(); sp.moveTo(sx, y - h_ - 20 * s)
+            sp.cubicTo(sx + 40 * s, y - h_ - 80 * s, sx - 40 * s, y - h_ - 140 * s, sx + 10 * s * math.sin(t * 2 + i), y - h_ - 200 * s)
+            c.drawPath(sp, P(color=col('#ffffff', int(a * steam * 0.7 * (1 - ph) + a * steam * 0.15)), stroke=12 * s))
+
+def oven(c, x, y, s, glow=0.0, t=0.0, alpha=255, door=True):
+    """Front of a plain oven; (x, y) = window centre. Returns window rect (in canvas units) for drawing inside."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    c.drawRoundRect(skia.Rect(-380, -330, 380, 360), 46, 46, lin(c, (0, -330, 0, 360), [col('#f4f6fa', a), col('#c9d1de', a)]))
+    c.drawRoundRect(skia.Rect(-380, -330, 380, 360), 46, 46, P(color=col('#1b2a4a', a), stroke=7))
+    c.drawRoundRect(skia.Rect(-360, -310, 360, -230), 24, 24, P(color=col('#1b2a4a', int(a * 0.9))))
+    for i in range(4):
+        kx = -260 + i * 130
+        c.drawCircle(kx, -270, 24, P(color=col('#dfe5ec', a))); c.drawLine(kx, -270, kx + 14, -286, P(color=col('#1b2a4a', a), stroke=5))
+    c.drawCircle(250, -270, 9, P(color=col('#ff5c85' if glow > 0.05 else '#55607a', a)))
+    c.drawRoundRect(skia.Rect(-300, -180, 300, 260), 30, 30, P(color=col('#2a2f3a', a)))
+    g = clamp(glow)
+    c.drawRoundRect(skia.Rect(-280, -160, 280, 240), 22, 22, rad(0, 40, 420, [col(mix_hx('#3a3f4c', '#ffb35c', g), a), col(mix_hx('#2a2f3a', '#c2531c', g), a)]))
+    for yy in (-140, 220):
+        for i in range(7):
+            xx = -240 + i * 80
+            c.drawLine(xx, yy, xx + 50, yy, P(color=col(mix_hx('#55607a', '#ff6b2c', g), a), stroke=10))
+    c.drawLine(-280, 160, 280, 160, P(color=col('#9aa3b0', a), stroke=6))
+    if door:
+        c.drawLine(-200, 300, 200, 300, P(color=col('#9aa3b0', a), stroke=22)); c.drawLine(-200, 300, 200, 300, P(color=col('#e8edf3', a), stroke=10))
+    c.restore()
+
+def crater(c, x, y, r, alpha=255, light=(-1, -1), squash=0.55, base='#8e8f95', fresh=0.0):
+    """Bowl-shaped impact crater on a surface (oblique view): raised rim, shadowed far wall, lit near wall."""
+    a = int(alpha); ry = r * squash
+    rim = skia.Rect(x - r * 1.18, y - ry * 1.18, x + r * 1.18, y + ry * 1.18)
+    c.drawOval(rim, P(color=col(mix_hx(base, '#ffffff', 0.25), a)))
+    if fresh > 0:
+        rnd = random.Random(int(x * 7 + y))
+        for i in range(14):
+            ang = rnd.uniform(0, 2 * math.pi); L = r * rnd.uniform(1.4, 2.4)
+            c.drawLine(x + math.cos(ang) * r * 1.1, y + math.sin(ang) * ry * 1.1, x + math.cos(ang) * L, y + math.sin(ang) * L * squash,
+                       P(color=col('#d8d9de', int(a * 0.6 * fresh)), stroke=r * 0.08))
+    bowl = skia.Rect(x - r, y - ry, x + r, y + ry)
+    c.drawOval(bowl, lin(c, (0, y - ry, 0, y + ry), [col(mix_hx(base, '#000000', 0.55), a), col(mix_hx(base, '#000000', 0.2), a), col(mix_hx(base, '#ffffff', 0.15), a)], [0, 0.55, 1]))
+    c.drawOval(skia.Rect(x - r * 0.55, y - ry * 0.2, x + r * 0.55, y + ry * 0.55), P(color=col(mix_hx(base, '#000000', 0.12), int(a * 0.8))))
+    c.drawArc(rim, 200, 140, False, P(color=col(mix_hx(base, '#ffffff', 0.5), a), stroke=max(2, r * 0.07)))
+    c.drawArc(bowl, 20, 140, False, P(color=col(mix_hx(base, '#000000', 0.45), int(a * 0.8)), stroke=max(2, r * 0.05)))
+
+def moon_ground(c, y, t=0.0, seed=4, x0=-20, x1=W + 20, y1=H, alpha=255, craters=True):
+    """Grey lunar plain from y down, with a gentle horizon and small craters + pebbles."""
+    a = int(alpha); p = skia.Path(); p.moveTo(x0, y + 10)
+    for i in range(13):
+        xx = lerp(x0, x1, i / 12); p.lineTo(xx, y + 14 * math.sin(i * 1.3 + seed))
+    p.lineTo(x1, y1); p.lineTo(x0, y1); p.close()
+    c.drawPath(p, lin(c, (0, y - 20, 0, y1), [col('#b7b8bd', a), col('#8a8b91', a), col('#6c6d73', a)], [0, 0.4, 1]))
+    rnd = random.Random(seed)
+    if craters:
+        for i in range(9):
+            cx = rnd.uniform(x0 + 40, x1 - 40); cy = rnd.uniform(y + 60, min(y1, y + 700)); cr = rnd.uniform(14, 46) * (0.5 + (cy - y) / 700)
+            crater(c, cx, cy, cr, alpha=a, base='#8e8f95')
+    for i in range(40):
+        px = rnd.uniform(x0, x1); py = rnd.uniform(y + 20, min(y1, y + 800)); pr = rnd.uniform(2, 6)
+        c.drawCircle(px, py, pr, P(color=col('#5e5f65', int(a * 0.8))))
+
+def impact_flash(c, x, y, k, r=200, alpha=255):
+    """Bright impact burst: flash + expanding ring + debris specks; k 0..1 = time since impact."""
+    if k <= 0 or k >= 1: return
+    a = int(alpha)
+    f = max(0, 1 - k * 2.5)
+    c.drawCircle(x, y, r * (0.4 + k), rad(x, y, r * (0.4 + k), [col('#ffffff', int(a * f)), col('#ffd23f', int(a * 0.6 * f)), col('#ff8a3c', 0)], [0, 0.4, 1]))
+    c.drawOval(skia.Rect(x - r * 1.6 * k, y - r * 0.6 * k, x + r * 1.6 * k, y + r * 0.6 * k), P(color=col('#e8e9ee', int(a * (1 - k) * 0.8)), stroke=10 * (1 - k) + 2))
+    rnd = random.Random(int(x + y))
+    for i in range(18):
+        ang = rnd.uniform(math.pi * 1.05, math.pi * 1.95); sp = rnd.uniform(0.5, 1.0) * r * 1.8
+        px = x + math.cos(ang) * sp * k; py = y + math.sin(ang) * sp * k + 300 * k * k
+        c.drawCircle(px, py, rnd.uniform(3, 8) * (1 - k * 0.5), P(color=col('#9a9ba1', int(a * (1 - k)))))
+
+BIRD_BODY = '#5b7fa6'; BIRD_BELLY = '#eef3f8'; BIRD_WING = '#3f5f86'
+
+def bird(c, x, y, s, t, flap=None, rot=0.0, alpha=255, body=BIRD_BODY, belly=BIRD_BELLY, wing=BIRD_WING, glide=False, section=False, fold=None):
+    """Plain songbird-like flyer, side view, flying right. flap = wing phase 0..1 (0 = top of upstroke,
+    0.5 = bottom of downstroke); None = flap from t. Natural small eye, no expression."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    ph = (t * 3.2) % 1.0 if flap is None else flap % 1.0
+    ang = 0.0 if glide else 62 * math.cos(ph * 2 * math.pi)   # +62 = wings up, -62 = down
+    def wing_shape(sign, shade):
+        fk = (0.45 * max(0.0, -math.sin(ph * 2 * math.pi)) if fold is None else fold) if not glide else 0.0   # wing folds on the upstroke
+        c.save(); c.translate(-10, -18); c.scale(1 - 0.25 * fk, (math.sin(math.radians(ang)) if abs(ang) > 4 else (0.07 if not glide else 0.12)) * (1 - fk))
+        wp = skia.Path(); wp.moveTo(-70, 0); wp.cubicTo(-60, -sign * 120, 40, -sign * 250, 150, -sign * 300)
+        wp.cubicTo(110, -sign * 200, 60, -sign * 80, 60, 0); wp.close()
+        c.drawPath(wp, lin(c, (0, 0, 0, -sign * 300), [col(shade, a), col(mix_hx(shade, '#1b2a4a', 0.35), a)]))
+        for k in range(4):
+            fx = 40 + k * 26
+            c.drawLine(fx - 70, -sign * (60 + k * 30), fx + 40, -sign * (210 + k * 18), P(color=col('#ffffff', int(a * 0.22)), stroke=4))
+        c.drawPath(wp, P(color=col('#1b2a4a', int(a * 0.5)), stroke=3))
+        c.restore()
+    wing_shape(1, mix_hx(wing, '#1b2a4a', 0.3))   # far wing
+    # tail
+    tl = skia.Path(); tl.moveTo(-110, -10); tl.lineTo(-215, -40); tl.lineTo(-222, 10); tl.lineTo(-110, 14); tl.close()
+    c.drawPath(tl, P(color=col(mix_hx(body, '#1b2a4a', 0.25), a)))
+    # body
+    bp = skia.Path(); bp.moveTo(-130, 0); bp.cubicTo(-90, -48, 60, -58, 110, -30); bp.cubicTo(130, -10, 120, 30, 80, 38)
+    bp.cubicTo(20, 50, -80, 40, -130, 0); bp.close()
+    c.drawPath(bp, lin(c, (0, -58, 0, 50), [col(body, a), col(mix_hx(body, belly, 0.4), a)]))
+    bl = skia.Path(); bl.moveTo(-90, 18); bl.cubicTo(-20, 50, 70, 46, 110, 10); bl.cubicTo(90, 40, 0, 52, -90, 18); bl.close()
+    c.drawPath(bl, P(color=col(belly, a)))
+    # head + beak + eye
+    c.drawCircle(118, -36, 40, lin(c, (0, -76, 0, 4), [col(body, a), col(mix_hx(body, belly, 0.3), a)]))
+    bk = skia.Path(); bk.moveTo(150, -46); bk.lineTo(196, -32); bk.lineTo(150, -22); bk.close()
+    c.drawPath(bk, P(color=col('#f2a541', a)))
+    c.drawCircle(132, -44, 8, P(color=col('#14181f', a))); c.drawCircle(134.5, -46.5, 2.5, P(color=col('#ffffff', a)))
+    if section:
+        c.drawCircle(0, -4, 34, P(color=col('#ffd23f', int(a * 0.85))))
+    wing_shape(1, wing)   # near wing
+    c.restore()
+
+def swift_bird(c, x, y, s, t, rot=0.0, alpha=255, colr='#2b2f3a'):
+    """Common swift silhouette seen from below: slim body, long sickle wings, short forked tail."""
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    fl = 0.12 * math.sin(t * 14)
+    for sx in (-1, 1):
+        wp = skia.Path(); wp.moveTo(sx * 14, -10)
+        wp.cubicTo(sx * 120, -40 - 60 * fl, sx * 230, -10 - 80 * fl, sx * 300, 60 - 90 * fl)
+        wp.cubicTo(sx * 210, 20 - 40 * fl, sx * 110, 18, sx * 14, 22); wp.close()
+        c.drawPath(wp, lin(c, (0, -60, 0, 60), [col(mix_hx(colr, '#ffffff', 0.15), a), col(colr, a)]))
+    bp = skia.Path(); bp.addOval(skia.Rect(-22, -60, 22, 70))
+    c.drawPath(bp, P(color=col(colr, a)))
+    tl = skia.Path(); tl.moveTo(-14, 60); tl.lineTo(-30, 120); tl.lineTo(0, 92); tl.lineTo(30, 120); tl.lineTo(14, 60); tl.close()
+    c.drawPath(tl, P(color=col(colr, a)))
+    c.drawOval(skia.Rect(-10, -58, 10, -40), P(color=col('#d8d4cc', int(a * 0.8))))
+    c.restore()
+
+def hollow_bone(c, x, y, s, section=1.0, alpha=255, t=0.0):
+    """Bird bone cut open lengthwise: thin wall, hollow inside, criss-cross struts (trabeculae)."""
+    a = int(alpha); c.save(); c.translate(x, y); c.scale(s, s)
+    outer = skia.Path(); outer.moveTo(-330, -50); outer.cubicTo(-400, -110, -430, -10, -380, 0); outer.cubicTo(-430, 10, -400, 110, -330, 50)
+    outer.lineTo(330, 50); outer.cubicTo(400, 110, 430, 10, 380, 0); outer.cubicTo(430, -10, 400, -110, 330, -50); outer.close()
+    c.drawPath(outer, lin(c, (0, -100, 0, 100), [col('#fffaf0', a), col('#ecdcbc', a)]))
+    if section > 0:
+        c.save(); c.saveLayerAlpha(None, int(a * clamp(section)))
+        cav = skia.Rect(-330, -34, 330, 34)
+        c.drawRoundRect(cav, 30, 30, P(color=col('#3b4a6b')))
+        c.save(); cl = skia.Path(); cl.addRoundRect(cav, 30, 30); c.clipPath(cl, doAntiAlias=True)
+        for i in range(12):
+            xx = -310 + i * 56
+            c.drawLine(xx, -34, xx + 40, 34, P(color=col('#f3e6c8'), stroke=7))
+            c.drawLine(xx + 40, -34, xx, 34, P(color=col('#f3e6c8'), stroke=5))
+        c.restore(); c.restore(); c.restore()
+    c.drawPath(outer, P(color=col('#b08a5a', a), stroke=5))
+    c.restore()
+
+def slab(c, x, y, w_, h_, kind='metal', alpha=255, seed=1, heat=0.0):
+    """Material block (oblique). kind 'metal' (brushed steel) or 'wood' (grain). (x, y) = front-top-left corner."""
+    a = int(alpha); d = h_ * 0.45
+    top = skia.Path(); top.moveTo(x, y); top.lineTo(x + d, y - d); top.lineTo(x + w_ + d, y - d); top.lineTo(x + w_, y); top.close()
+    side = skia.Path(); side.moveTo(x + w_, y); side.lineTo(x + w_ + d, y - d); side.lineTo(x + w_ + d, y + h_ - d); side.lineTo(x + w_, y + h_); side.close()
+    front = skia.Rect(x, y, x + w_, y + h_)
+    if kind == 'metal':
+        c.drawPath(top, lin(c, (x, 0, x + w_ + d, 0), [col('#e9eef4', a), col('#b7c1cd', a), col('#f4f7fa', a), col('#aab5c2', a)], vertical=False))
+        c.drawPath(side, P(color=col('#7f8b99', a)))
+        c.drawRect(front, lin(c, (0, y, 0, y + h_), [col('#c7d0db', a), col('#8e9aa8', a)]))
+        rnd = random.Random(seed)
+        c.save(); c.clipPath(top, doAntiAlias=True)
+        for i in range(14):
+            yy = y - d * rnd.uniform(0.1, 0.9); xx = x + rnd.uniform(0, w_)
+            c.drawLine(xx + (y - yy), yy, xx + (y - yy) + rnd.uniform(60, 180), yy, P(color=col('#ffffff', int(a * 0.35)), stroke=2))
+        c.restore()
+        edge = '#5d6876'
+    else:
+        c.drawPath(top, lin(c, (0, y - d, 0, y), [col('#e6b67a', a), col('#c98d4e', a)]))
+        c.drawPath(side, P(color=col('#8a5a2c', a)))
+        c.drawRect(front, lin(c, (0, y, 0, y + h_), [col('#c2864a', a), col('#9c6534', a)]))
+        rnd = random.Random(seed)
+        c.save(); c.clipPath(top, doAntiAlias=True)
+        for i in range(9):
+            yy = y - d * (i + 0.5) / 9; wob = rnd.uniform(4, 10)
+            gp = skia.Path(); gp.moveTo(x - 20 + (y - yy), yy)
+            for k in range(1, 21):
+                xx = x + (y - yy) + (w_ + 40) * k / 20; gp.lineTo(xx, yy + wob * math.sin(k * 0.9 + i))
+            c.drawPath(gp, P(color=col('#a86d34', int(a * 0.55)), stroke=3))
+        c.restore()
+        for i in range(4):
+            yy = y + h_ * (i + 0.5) / 4
+            c.drawLine(x + 6, yy, x + w_ - 6, yy + 4 * math.sin(i), P(color=col('#7d4c22', int(a * 0.45)), stroke=3))
+        edge = '#5e3a1a'
+    if heat > 0:
+        c.drawPath(top, P(color=col('#ff8a3c', int(a * 0.45 * clamp(heat)))))
+    for p_ in (top, side): c.drawPath(p_, P(color=col(edge, a), stroke=4))
+    c.drawRect(front, P(color=col(edge, a), stroke=4))
+
+def fingertip(c, x, y, s, rot=0.0, alpha=255, skin='#f2c9a6', cold=0.0, fade_top=None):
+    """Plain index finger pointing down, tip at (x, y). cold 0..1 tints the tip blue."""
+    if fade_top is not None:   # fade the finger out towards the top (canvas y), keeps it out of the caption zone
+        c.saveLayer(None)
+        fingertip(c, x, y, s, rot, alpha, skin, cold, None)
+        pm = skia.Paint(AntiAlias=True); pm.setBlendMode(skia.BlendMode.kDstIn)
+        pm.setShader(skia.GradientShader.MakeLinear([skia.Point(0, fade_top), skia.Point(0, fade_top + 160)], [col('#000000', 0), col('#000000', 255)]))
+        c.drawRect(skia.Rect(0, 0, W, H), pm); c.restore(); return
+    a = int(alpha); c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    fp = skia.Path(); fp.moveTo(-62, -520); fp.lineTo(-62, -70); fp.cubicTo(-62, -10, -30, 8, 0, 8); fp.cubicTo(30, 8, 62, -10, 62, -70); fp.lineTo(62, -520); fp.close()
+    tip = mix_hx(skin, '#9cc8ff', 0.55 * clamp(cold))
+    c.drawPath(fp, lin(c, (-62, 0, 62, 0), [col(mix_hx(skin, '#c98a6a', 0.3), a), col(mix_hx(skin, '#ffffff', 0.2), a), col(mix_hx(skin, '#c98a6a', 0.35), a)], vertical=False))
+    c.save(); c.clipPath(fp, doAntiAlias=True)
+    c.drawRect(skia.Rect(-70, -140, 70, 20), lin(c, (0, -140, 0, 20), [col(tip, 0), col(tip, int(a * 0.9))]))
+    c.restore()
+    nail = skia.Path(); nail.addRoundRect(skia.Rect(-36, -150, 36, -60), 30, 30)
+    c.drawPath(nail, lin(c, (0, -150, 0, -60), [col('#fbe3d6', a), col('#f3c9b8', a)]))
+    c.drawPath(nail, P(color=col('#c98a6a', int(a * 0.6)), stroke=3))
+    for yy in (-300, -330):
+        c.drawArc(skia.Rect(-40, yy - 12, 40, yy + 12), 20, 140, False, P(color=col('#c98a6a', int(a * 0.5)), stroke=4))
+    c.drawPath(fp, P(color=col('#b9805e', a), stroke=4))
+    c.restore()
+
+def heat_dot(c, x, y, r, alpha=230, colr='#ff7a3c'):
+    """Small glowing heat-energy particle."""
+    if alpha <= 0: return
+    a = int(alpha)
+    c.drawCircle(x, y, r * 2.2, rad(x, y, r * 2.2, [col(colr, int(a * 0.5)), col(colr, 0)]))
+    c.drawCircle(x, y, r, P(color=col(mix_hx(colr, '#ffffff', 0.35), a)))

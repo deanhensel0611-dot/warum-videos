@@ -55,8 +55,10 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 - TikTok per-video view counts come back as 0 from Windsor again (account total 4,861); avg. watch time still readable.
 
 - 2026-11-26 (n=24 TikTok – 3 new: teeth, magnets, spiders + ships <24 h; YouTube n=19 Shorts, new: penguins, seed, sound): E2 still **0 measured** (ep_042–045 not posted anywhere yet; first one goes live on YouTube 11-28). TikTok watch share (avg. watch ÷ length, general captions, ≥24 h, n=18): top quartile leaves 33 %, caterpillar 27 %, spiders 26 %, sun 24 %; bottom quartile airplanes 12 %, thunder 12 %, onions 12 %, plants 13 %. Spiders (75.7 s, E1) is in the top group → length alone doesn't explain the bottom; 3 of the top 4 are nature/biology "building/transforming" topics (topic effect, **uncertain but repeating**, n=4). YouTube: new Shorts penguins 334 views / 33 %, sound 44 / 34 % – both E1, consistent with E1's lower view % (now n=6, mean ~38 % vs ~52 % for pre-E1). Airplanes Short grew to 983 views.
+- 2026-11-27 (n=24 TikTok – no new posts since 11-26; YouTube n=23 Shorts, new: volcano, stars, ships, sun): E2 still **0 measured** (first E2 Short, Mars, goes live 11-27 18:00 New York). TikTok watch share (general captions, n=19; Windsor revised several values, e.g. caterpillar now 11.8 s): top quartile leaves 33 %, sun 24 %, wind 20 %, ships 19 %; bottom quartile thunder 9 %, fish 11 %, airplanes 12 %, onions 12 %. Videos <70 s average 17.0 % (n=11) vs 15.4 % for ≥70 s (n=8) – small edge for shorter, **uncertain** (topic + age confounded). YouTube: volcano (pre-E1 look, 63 s) 1,069 views / 55 % avg view in 3 days – pre-E1 Shorts average ~52 % avg view (n=9) vs ~35 % for E1 Shorts (n=7) – the gap holds. Stars / sun / ships Shorts (uploaded 11-24) have 0–3 views – likely a visibility/audience setting, not style.
 
 ## Change history
+- 2026-11-27: No new style change (E2 0 measured – nothing E2 live yet). E2 (62–68 s) continued on ep_050–053 (62.9 / 62.7 / 63.5 / 62.4 s). New lib props: yeast_cell (budding), gas_bubble, dough (rise/section/bubbles), gluten_net, bread_loaf (crumb cut-away, steam), oven, crater (oblique bowl with rim/rays), moon_ground, impact_flash, bird (plain side-view flyer, flap phase, folds on the upstroke), swift_bird, hollow_bone (struts), slab (metal/wood block), fingertip (cold tint, fade_top keeps it out of the caption zone), heat_dot.
 - 2026-11-26: No new style change (E2 0/4 measured – nothing published yet). E2 (62–68 s) continued on ep_046–049. New lib props: long_bone (with marrow cut-away), xray_body (plain X-ray skeleton, highlightable parts, arm lift), plain_face (neutral adult face, brows on/off, raise/frown, sweat), firefly (plain top view, glowing lantern, flight wings), BONE colours.
 - 2026-11-25: E1 closed (no measurable benefit, cold open kept as default). **E2 started: length 62–68 s** on ep_042–045 (65.3 / 64.7 / 62.7 / 64.5 s). New lib props: mars (globe with rot/gray/storm), ant (plain top view, tripod gait, legs_long), kernel_path + popcorn_kernel (section/steam/heat/swell), popcorn_puff, gauge (pressure dial), ice_crystal (clear hex plate), snow_ground.
 - 2026-11-24: No style change (E1 now 2 measured on TikTok, no clear effect yet). E1 cold open continued on ep_038–041. New lib props: apple, hammer, quill (plain white feather), whale (plain blue whale, side view, swim/flukes) + whale_hole + whale_blow (misty V-spout), lungs (fill level), owl (plain, perched, head yaw 0–360° incl. back of head), owl_eye_section (tubular eye + sclerotic ring), vertebra_chain, space_rock, meteor (glowing streak), comet, brain (per-hemisphere awake/asleep). rad()/P() now tolerate zero radius/blur.
@@ -70,6 +72,13 @@ Insights from fewer than 5 videos per feature are marked "uncertain". Separate s
 
 ## Daily reports
 (newest on top, max. 10 lines each)
+
+**2026-11-27** (data: 24 TikToks + 23 YouTube Shorts, last 14 days via Windsor.ai)
+- New: no new TikTok posts since 11-26; YouTube volcano 1,069 views / 55 % avg view (best new Short); stars, sun, ships Shorts 0–3 views.
+- Worked: shorter TikToks hold slightly more (<70 s: 17.0 % watch share vs 15.4 % for ≥70 s); leaves 33 %, sun 24 %, wind 20 % lead.
+- Didn't work: thunder 9 %, fish 11 %, airplanes/onions 12 % on TikTok; E1-era Shorts ~35 % avg view vs ~52 % pre-E1 on YouTube.
+- Change today: none – E2 (62–68 s) has 0 measured videos; continued on ep_050–053 (62–64 s).
+- Uncertain: length vs topic vs age; first E2 data from the Mars Short (live 11-27 18:00 NY) on the next runs.
 
 **2026-11-26** (data: 24 TikToks + 19 YouTube Shorts, last 14 days via Windsor.ai)
 - New: TikTok teeth 373 views, magnets 261, spiders 66 (19.8 s avg. watch = 26 % – best new one), ships 14 (<24 h); YouTube penguins 334 views, sound 44, seed 4.
