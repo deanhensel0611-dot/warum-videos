@@ -56,10 +56,10 @@ Add new ideas at the bottom. Pick only questions with a clear, well-established 
 - [x] Why does the Moon have craters? → ep_051_why_does_the_moon_have_craters
 - [x] How do birds fly? → ep_052_how_do_birds_fly
 - [x] Why does metal feel colder than wood? → ep_053_why_does_metal_feel_colder_than_wood
-- [ ] Why does salt melt ice?
-- [ ] How do glow sticks glow?
-- [ ] How do rockets move in empty space?
-- [ ] Why are sunsets red?
+- [x] Why does salt melt ice? → ep_054_why_does_salt_melt_ice
+- [x] How do glow sticks glow? → ep_055_how_do_glow_sticks_glow
+- [x] How do rockets move in empty space? → ep_056_how_do_rockets_move_in_empty_space
+- [x] Why are sunsets red? → ep_057_why_are_sunsets_red
 - [ ] How does a microwave heat food?
 - [ ] How do submarines sink and rise?
 - [ ] How do our eyes see color?

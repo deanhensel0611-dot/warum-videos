@@ -3800,3 +3800,174 @@ def heat_dot(c, x, y, r, alpha=230, colr='#ff7a3c'):
     a = int(alpha)
     c.drawCircle(x, y, r * 2.2, rad(x, y, r * 2.2, [col(colr, int(a * 0.5)), col(colr, 0)]))
     c.drawCircle(x, y, r, P(color=col(mix_hx(colr, '#ffffff', 0.35), a)))
+
+# ---------------- Salt ions, glow sticks, rockets, balloons (added for ep_054+) ----------------
+ION_NA = '#ffd23f'; ION_CL = '#7ed957'
+
+def ion(c, x, y, r, sign=1, alpha=255, colr=None):
+    """Plain charged particle: ball with a + (sign>0) or - sign. Default colours: Na+ yellow, Cl- green."""
+    a = int(alpha); hx = colr or (ION_NA if sign > 0 else ION_CL)
+    c.drawCircle(x, y + r * 0.12, r, P(color=col('#0b1a3a', int(a * 0.18)), blur=max(1, r * 0.15)))
+    c.drawCircle(x, y, r, rad(x - r * 0.35, y - r * 0.4, r * 1.6, [col('#ffffff', a), col(hx, a), col(mix_hx(hx, '#1b2a4a', 0.3), a)], [0, 0.45, 1]))
+    c.drawCircle(x, y, r, P(color=col(mix_hx(hx, '#1b2a4a', 0.45), a), stroke=max(1.5, r * 0.08)))
+    st = max(2, r * 0.17); L = r * 0.42
+    pp = P(color=col('#1b2a4a', a), stroke=st); pp.setStrokeCap(skia.Paint.kRound_Cap)
+    c.drawLine(x - L, y, x + L, y, pp)
+    if sign > 0: c.drawLine(x, y - L, x, y + L, pp)
+
+def _stick_pts(L, bend, n=40):
+    b = math.radians(bend); pts = []
+    for i in range(n + 1):
+        u = -1 + 2 * i / n
+        if abs(b) < 1e-3: pts.append((u * L / 2, 0.0))
+        else:
+            R = L / b; ang = u * b / 2
+            pts.append((R * math.sin(ang), -R * (1 - math.cos(ang))))
+    return pts
+
+def _poly(pts, i0=0, i1=None):
+    p = skia.Path(); seg = pts[i0:i1]
+    p.moveTo(*seg[0])
+    for q in seg[1:]: p.lineTo(*q)
+    return p
+
+def glow_stick(c, x, y, s=1.0, rot=0.0, colr='#7dff5a', glow=0.0, bend=0.0, crack=0.0, alpha=255, t=0.0, vial=1.0, mix=0.0):
+    """Glow stick seen from the side, centred at x,y, horizontal at rot=0 (length ~560*s). bend = degrees the ends
+    curl up; crack 0..1 breaks the inner glass vial in the middle; glow 0..1 lights the liquid in colr;
+    vial 0..1 shows the inner glass tube; mix 0..1 swirls the two liquids together."""
+    a = int(alpha); L = 560 * s; w = 64 * s
+    pts = _stick_pts(L, bend)
+    c.save(); c.translate(x, y); c.rotate(rot)
+    full = _poly(pts)
+    def stroke(width, colour, blur=0):
+        pp = P(color=colour, stroke=width, blur=blur) if blur else P(color=colour, stroke=width)
+        pp.setStrokeCap(skia.Paint.kRound_Cap); pp.setStrokeJoin(skia.Paint.kRound_Join); return pp
+    fl = 0.92 + 0.08 * math.sin(t * 7.0)
+    if glow > 0:
+        c.drawPath(full, stroke(w * 3.2, col(colr, int(a * 0.32 * glow * fl)), blur=w * 0.9))
+        c.drawPath(full, stroke(w * 1.7, col(colr, int(a * 0.45 * glow * fl)), blur=w * 0.35))
+    # plastic tube
+    c.drawPath(full, stroke(w, col(mix_hx('#e8eef6', colr, 0.25 + 0.5 * glow), int(a * 0.95))))
+    # liquid
+    liq = mix_hx(mix_hx('#d9e6d2', colr, 0.35), '#ffffff', 0.0)
+    liq = mix_hx(liq, mix_hx(colr, '#ffffff', 0.25), glow)
+    c.drawPath(full, stroke(w * 0.74, col(liq, a)))
+    if mix > 0 and glow < 1:
+        rnd = random.Random(5)
+        for i in range(14):
+            k = rnd.randrange(4, len(pts) - 4); px, py = pts[k]
+            ph = t * 2.5 + i
+            c.drawCircle(px + math.sin(ph) * w * 0.15, py + math.cos(ph * 1.3) * w * 0.14, w * 0.11, P(color=col('#bfe6ff', int(a * 0.8 * mix * (1 - glow)))))
+    # inner glass vial (middle 76 %)
+    if vial > 0:
+        n = len(pts) - 1; i0, i1 = int(n * 0.12), int(n * 0.88) + 1
+        va = int(a * vial)
+        if crack <= 0:
+            vp = _poly(pts, i0, i1)
+            c.drawPath(vp, stroke(w * 0.36, col('#ffffff', int(va * 0.55))))
+            c.drawPath(vp, stroke(w * 0.36 - 3 * s, col('#bfe6ff', int(va * 0.65 * (1 - glow * 0.6)))))
+        else:
+            mid = n // 2; gap = max(1, int(2 * crack))
+            for (j0, j1) in ((i0, mid - gap + 1), (mid + gap, i1)):
+                vp = _poly(pts, j0, j1)
+                c.drawPath(vp, stroke(w * 0.36, col('#ffffff', int(va * 0.55))))
+                c.drawPath(vp, stroke(w * 0.36 - 3 * s, col('#bfe6ff', int(va * 0.65 * (1 - glow * 0.6)))))
+            mx, my = pts[mid]
+            rnd = random.Random(11)
+            for i in range(6):
+                ang = rnd.uniform(0, 2 * math.pi); d = w * 0.25 * crack * rnd.uniform(0.6, 1.4)
+                sh = skia.Path(); cx_, cy_ = mx + math.cos(ang) * d, my + math.sin(ang) * d * 0.5
+                sh.moveTo(cx_ - 6 * s, cy_ - 4 * s); sh.lineTo(cx_ + 6 * s, cy_ - 2 * s); sh.lineTo(cx_, cy_ + 6 * s); sh.close()
+                c.drawPath(sh, P(color=col('#ffffff', int(va * 0.8))))
+    # glossy highlight + outline
+    hl = skia.Path(); first = True
+    for (px, py) in pts[3:-3]:
+        if first: hl.moveTo(px, py - w * 0.27); first = False
+        else: hl.lineTo(px, py - w * 0.27)
+    c.drawPath(hl, stroke(w * 0.1, col('#ffffff', int(a * 0.7))))
+    ol = P(color=col(mix_hx('#7d8aa3', colr, 0.3 * glow), int(a * 0.55)), stroke=2.5 * s)
+    # end caps + hanging loop
+    ex, ey = pts[-1]
+    c.drawCircle(ex, ey, w * 0.52, P(color=col(mix_hx('#f3f6fa', colr, 0.35 * glow), a)))
+    c.drawCircle(ex, ey, w * 0.52, ol)
+    sx_, sy_ = pts[0]
+    c.drawCircle(sx_, sy_, w * 0.52, P(color=col(mix_hx('#f3f6fa', colr, 0.35 * glow), a)))
+    c.drawCircle(sx_, sy_, w * 0.52, ol)
+    dx, dy = pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]; d = math.hypot(dx, dy) or 1
+    lx, ly = sx_ - dx / d * w * 0.75, sy_ - dy / d * w * 0.75
+    c.drawCircle(lx, ly, w * 0.24, P(color=col('#c9d3e2', a), stroke=5 * s))
+    c.restore()
+
+def rocket_flame(c, x, y, s, t, k=1.0, alpha=255, vac=0.0):
+    """Exhaust flame pointing down from (x, y) = nozzle exit. k = length factor, vac 0..1 spreads it wider (vacuum plume)."""
+    if k <= 0: return
+    a = int(alpha); fl = 1 + 0.08 * math.sin(t * 31) + 0.05 * math.sin(t * 17 + 1)
+    Lf = 330 * s * k * fl; w0 = 46 * s
+    for (wk, lk, cc, aa) in ((1.9 + 1.6 * vac, 1.0, '#ff5c3c', 0.55), (1.4 + 1.0 * vac, 0.82, '#ff9a3c', 0.85), (0.95 + 0.5 * vac, 0.62, '#ffd23f', 1.0), (0.5, 0.42, '#ffffff', 1.0)):
+        p = skia.Path(); ww = w0 * wk; ll = Lf * lk
+        p.moveTo(x - w0 * 0.9, y)
+        p.cubicTo(x - ww, y + ll * 0.35, x - ww * 0.35, y + ll * 0.8, x, y + ll)
+        p.cubicTo(x + ww * 0.35, y + ll * 0.8, x + ww, y + ll * 0.35, x + w0 * 0.9, y); p.close()
+        c.drawPath(p, P(color=col(cc, int(a * aa)), blur=4 * s if cc != '#ffffff' else 2 * s))
+    c.drawCircle(x, y + Lf * 0.3, Lf * 0.55, rad(x, y + Lf * 0.3, Lf * 0.55, [col('#ffb43c', int(a * 0.25)), col('#ffb43c', 0)]))
+
+def rocket(c, x, y, s=1.0, rot=0.0, t=0.0, flame=0.0, alpha=255, cut=0.0, vac=0.0, labels=False):
+    """Plain white rocket, nose up at rot=0, (x, y) = body centre; total height ~640*s. flame 0..1 = exhaust length;
+    cut 0..1 opens a cut-away showing the fuel tank (yellow), oxygen tank (blue) and combustion chamber."""
+    a = int(alpha)
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
+    bw, top, bot = 70, -200, 230
+    if flame > 0: rocket_flame(c, 0, bot + 70, 1.0, t, flame, alpha, vac)
+    # nozzle
+    nz = skia.Path(); nz.moveTo(-34, bot); nz.lineTo(34, bot); nz.lineTo(56, bot + 72); nz.lineTo(-56, bot + 72); nz.close()
+    c.drawPath(nz, lin(c, (-56, 0, 56, 0), [col('#5b6a86', a), col('#a9b6cc', a), col('#4a5872', a)], vertical=False, pos=[0, 0.45, 1]))
+    # fins
+    for sx in (-1, 1):
+        f = skia.Path(); f.moveTo(sx * bw, bot - 150); f.cubicTo(sx * (bw + 70), bot - 80, sx * (bw + 95), bot + 10, sx * (bw + 95), bot + 60)
+        f.lineTo(sx * bw, bot + 10); f.close()
+        c.drawPath(f, lin(c, (0, bot - 150, 0, bot + 60), [col('#ff7a9a', a), col('#e8264f', a)]))
+        c.drawPath(f, P(color=col('#b51d3f', int(a * 0.6)), stroke=3))
+    # body
+    body = skia.Path(); body.addRoundRect(skia.Rect(-bw, top, bw, bot + 10), 18, 18)
+    nose = skia.Path(); nose.moveTo(-bw, top + 8); nose.cubicTo(-bw, top - 120, -24, top - 190, 0, top - 210)
+    nose.cubicTo(24, top - 190, bw, top - 120, bw, top + 8); nose.close()
+    c.drawPath(body, lin(c, (-bw, 0, bw, 0), [col('#c9d3e2', a), col('#ffffff', a), col('#f3f6fa', a), col('#aab6c9', a)], vertical=False, pos=[0, 0.35, 0.6, 1]))
+    c.drawPath(body, P(color=col('#7d8aa3', int(a * 0.8)), stroke=3.5))
+    c.drawPath(nose, lin(c, (-bw, 0, bw, 0), [col('#e8264f', a), col('#ff7a9a', a), col('#c41f45', a)], vertical=False, pos=[0, 0.4, 1]))
+    c.drawPath(nose, P(color=col('#9c1636', int(a * 0.5)), stroke=3))
+    for yy in (top + 40, bot - 40):
+        c.drawRect(skia.Rect(-bw, yy, bw, yy + 16), P(color=col('#2f9bff', a)))
+    if cut > 0:
+        ca = int(a * cut)
+        c.drawRoundRect(skia.Rect(-bw + 12, top + 68, bw - 12, bot - 52), 12, 12, P(color=col('#1b2a4a', ca)))
+        c.drawRoundRect(skia.Rect(-bw + 20, top + 76, bw - 20, top + 210), 22, 22, lin(c, (0, top + 76, 0, top + 210), [col('#ffe680', ca), col('#ffbf1f', ca)]))
+        c.drawRoundRect(skia.Rect(-bw + 20, top + 222, bw - 20, bot - 110), 22, 22, lin(c, (0, top + 222, 0, bot - 110), [col('#9fd6ff', ca), col('#2f9bff', ca)]))
+        ch = skia.Path(); ch.moveTo(-30, bot - 100); ch.lineTo(30, bot - 100); ch.lineTo(22, bot - 60); ch.lineTo(-22, bot - 60); ch.close()
+        c.drawPath(ch, P(color=col('#ff9a3c', ca)))
+        if labels:
+            pass
+    else:
+        c.drawCircle(0, top + 90, 30, P(color=col('#7d8aa3', a)))
+        c.drawCircle(0, top + 90, 23, rad(-8, top + 82, 34, [col('#cfeaff', a), col('#2f9bff', a), col('#1b4f9a', a)], [0, 0.5, 1]))
+        c.drawCircle(-8, top + 82, 6, P(color=col('#ffffff', int(a * 0.85))))
+    c.restore()
+
+def balloon(c, x, y, r, colr='#ff5c85', alpha=255, rot=0.0, squash=0.0, string=True, t=0.0):
+    """Party balloon (no face), (x, y) = centre, neck pointing down at rot=0. squash 0..1 shrinks/wrinkles it (deflating)."""
+    a = int(alpha); k = 1 - 0.45 * squash
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(k * (1 + 0.05 * math.sin(t * 13) * squash), k)
+    p = skia.Path(); p.moveTo(0, -r * 1.18)
+    p.cubicTo(r * 1.05, -r * 1.18, r * 1.1, r * 0.25, r * 0.18, r * 1.0)
+    p.lineTo(-r * 0.18, r * 1.0)
+    p.cubicTo(-r * 1.1, r * 0.25, -r * 1.05, -r * 1.18, 0, -r * 1.18); p.close()
+    c.drawPath(p, rad(-r * 0.35, -r * 0.5, r * 1.9, [col(mix_hx(colr, '#ffffff', 0.45), a), col(colr, a), col(mix_hx(colr, '#1b2a4a', 0.3), a)], [0, 0.5, 1]))
+    c.drawPath(p, P(color=col(mix_hx(colr, '#1b2a4a', 0.4), int(a * 0.5)), stroke=3))
+    kn = skia.Path(); kn.moveTo(-r * 0.16, r * 1.0); kn.lineTo(r * 0.16, r * 1.0); kn.lineTo(r * 0.1, r * 1.14); kn.lineTo(-r * 0.1, r * 1.14); kn.close()
+    c.drawPath(kn, P(color=col(mix_hx(colr, '#1b2a4a', 0.25), a)))
+    hl = skia.Path(); hl.addOval(skia.Rect(-r * 0.62, -r * 0.85, -r * 0.3, -r * 0.3))
+    c.drawPath(hl, P(color=col('#ffffff', int(a * 0.55)), blur=2))
+    if string:
+        sp = skia.Path(); sp.moveTo(0, r * 1.14)
+        sp.cubicTo(r * 0.2, r * 1.5, -r * 0.2, r * 1.8, r * 0.05, r * 2.2)
+        c.drawPath(sp, P(color=col('#7d8aa3', a), stroke=3))
+    c.restore()
