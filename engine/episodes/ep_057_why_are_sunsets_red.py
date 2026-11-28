@@ -134,7 +134,7 @@ def earth_diag(c, t, night=0.0):
         c.drawOval(skia.Rect(EX + lx - lw / 2, EY + ly - lh / 2, EX + lx + lw / 2, EY + ly + lh / 2), lin(c, (0, EY + ly - lh, 0, EY + ly + lh), [col('#7ed957'), col('#4fae3a')]))
     c.restore()
     c.drawCircle(EX, EY, ER, P(color=col('#ffffff', 140), stroke=5))
-    label_pill(c, 'AIR', EX + 470, EY - ER - 40, size=34, k=1.0, fill=NAVY, hi=SKYB)
+    label_pill(c, 'AIR', 820, 1040, size=34, k=1.0, fill=NAVY, hi=SKYB)
 
 def you_pin(c, x, y, k=1.0):
     if k <= 0: return
